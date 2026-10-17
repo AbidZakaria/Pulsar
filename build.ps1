@@ -8,3 +8,8 @@ if (-not (Test-Path "$root\native\pulsar.ico")) { & "$root\native\make-icon.ps1"
   /r:"$lib\Microsoft.Web.WebView2.Core.dll" /r:"$lib\Microsoft.Web.WebView2.WinForms.dll" /r:System.Windows.Forms.dll /r:System.Drawing.dll `
   /resource:"$lib\Microsoft.Web.WebView2.Core.dll",Microsoft.Web.WebView2.Core.dll /resource:"$lib\Microsoft.Web.WebView2.WinForms.dll",Microsoft.Web.WebView2.WinForms.dll `
   /resource:"$lib\WebView2Loader.dll",WebView2Loader.dll /resource:"$root\player.html",player.html "$root\native\Program.cs"
+
+# ---- installer: PulsarSetup.exe carries Pulsar.exe inside ----
+& C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /nologo /target:winexe /win32icon:"$root\native\pulsar.ico" /out:"$out\PulsarSetup.exe" `
+  /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll `
+  /resource:"$out\Pulsar.exe",Pulsar.exe "$root\native\Setup.cs"

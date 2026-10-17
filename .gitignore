@@ -11,5 +11,7 @@
 # build output and third-party DLLs copied from another app's install
 release/*
 !release/Pulsar.exe
+!release/PulsarSetup.exe
 native/lib/
+
 

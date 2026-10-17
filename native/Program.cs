@@ -163,6 +163,7 @@ class MainForm : Form
 
     // ---------------- downloads via yt-dlp ----------------
     Process dl;
+    static bool updated;
 
     static string Js(string s)
     {
@@ -185,6 +186,8 @@ class MainForm : Form
     static string FindTool(string name)
     {
         var exe = name + ".exe";
+        var own = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OfflinePlayer", "tools", exe);
+        if (File.Exists(own)) return own;
         foreach (var d in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(';'))
         {
             try { if (d.Trim().Length > 0) { var p = Path.Combine(d.Trim(), exe); if (File.Exists(p)) return p; } } catch { }
@@ -246,6 +249,11 @@ class MainForm : Form
                 RunWait("winget", "install --id yt-dlp.yt-dlp -e --accept-source-agreements --accept-package-agreements --silent");
                 ytdlp = FindTool("yt-dlp");
                 if (ytdlp == null) { Ev("err", "Could not install yt-dlp. Run: winget install yt-dlp.yt-dlp", 0); return; }
+            }
+            if (!updated && ytdlp.IndexOf("OfflinePlayer", StringComparison.OrdinalIgnoreCase) >= 0)
+            {   // the copy we installed keeps itself current (YouTube changes often)
+                updated = true;
+                try { Ev("info", "Checking for downloader updates...", 0); RunWait(ytdlp, "-U"); } catch { }
             }
             var ff = FindTool("ffmpeg");
             if (ff == null)
