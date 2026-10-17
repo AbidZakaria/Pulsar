@@ -1,0 +1,13 @@
+﻿# downloaded music + leftovers (copyrighted / large)
+*.mp3
+*.m4a
+*.opus
+*.webm
+*.webm.part
+*.part
+*.webp
+*.jpg
+*.png
+# build output and third-party DLLs copied from another app's install
+release/
+native/lib/
