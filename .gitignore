@@ -9,5 +9,7 @@
 *.jpg
 *.png
 # build output and third-party DLLs copied from another app's install
-release/
+release/*
+!release/Pulsar.exe
 native/lib/
+
