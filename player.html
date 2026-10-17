@@ -268,7 +268,7 @@ const STY=[
  {n:'Radial',r:'radial',dyn:'cover'},
  {n:'Hyper Tunnel',r:'tunnel',p:['0,240,255','255,0,200','170,255,0']},
  {n:'Lava Lamp',r:'lava',p:['255,70,30','255,170,40','255,40,120']},
- {n:'City Lights',r:'city',p:['120,60,200','255,210,120','255,120,170']},
+ {n:'Flow Field',r:'flow',p:['0,200,255','255,60,200','255,230,120']},
  {n:'Matrix',r:'matrix',p:['40,255,100']},
  {n:'Kaleido',r:'kaleido',dyn:'hue'},
  {n:'Aurora',r:'aurora',p:['40,255,150','60,140,255','170,80,255']},
@@ -291,7 +291,7 @@ function pickStyle(){
 const bgc=$('bgc'),bx=bgc.getContext('2d');let BW=1,BH=1,rings=[],stars=null,life=null,lastStep=0,hueCols=['255,77,109'];
 function fitBg(){const s=.7*(devicePixelRatio||1);BW=bgc.width=Math.ceil(innerWidth*s);BH=bgc.height=Math.ceil(innerHeight*s);life=null;stars=null}
 function setStyle(i){
-  style=i;rings=[];stars=null;life=null;city=null;cols=null;drops=null;ripp=[];flash=0;rk=[];sparks=[];em=[];peaks=[];
+  style=i;rings=[];stars=null;life=null;flow=null;cols=null;drops=null;ripp=[];flash=0;rk=[];sparks=[];em=[];peaks=[];
   bgc.style.transition='none';bgc.style.opacity=0;void bgc.offsetWidth;bgc.style.transition='';bgc.style.opacity=1;
   document.querySelectorAll('.sw').forEach(e=>e.classList.toggle('on',+e.dataset.i===i));
 }
@@ -320,7 +320,7 @@ function lifeStep(){
   life.a=b;life.b=a;life.pop=pop;
 }
 function rLife(c,k,t,beat,edge,now,playing){
-  if(!life){const cs=Math.max(6,Math.ceil(BW/80));life={cs,w:Math.ceil(BW/cs),h:Math.ceil(BH/cs),pop:0};life.a=new Uint8Array(life.w*life.h);life.b=new Uint8Array(life.w*life.h);lifeSeed(.14)}
+  if(!life){const cs=Math.max(6,Math.ceil(U()/44));life={cs,w:Math.ceil(BW/cs),h:Math.ceil(BH/cs),pop:0};life.a=new Uint8Array(life.w*life.h);life.b=new Uint8Array(life.w*life.h);lifeSeed(.14)}
   const L=life;
   if(edge){const cx=Math.floor(Math.random()*L.w),cy=Math.floor(Math.random()*L.h);
     for(let j=0;j<24;j++){const x=(cx+Math.floor(Math.random()*7)-3+L.w)%L.w,y=(cy+Math.floor(Math.random()*7)-3+L.h)%L.h;L.a[y*L.w+x]=1;L.a[y*L.w+(L.w-1-x)]=1}
@@ -336,7 +336,8 @@ function rLife(c,k,t,beat,edge,now,playing){
 // ---------- creative renderers ----------
 const sp=(i,n)=>fd?fd[Math.min(fd.length-1,Math.floor(i/n*fd.length*.7))]/255:0;   // spectrum at position i of n (0..1)
 const rgbA=s=>s.split(',').map(Number);
-let city=null,cols=null,drops=null,ripp=[],flash=0,bolt=null,rk=[],sparks=[],em=[],peaks=[];
+const U=()=>Math.min(BW,BH);   // size unit: effects scale with this so portrait and fullscreen look the same
+let cols=null,drops=null,ripp=[],flash=0,bolt=null,rk=[],sparks=[],em=[],peaks=[];
 
 // 80s sunset: striped sun that swells on bass, mountains shaped by the spectrum, perspective grid that speeds up with energy
 function rSynth(c,k,t){
@@ -358,7 +359,7 @@ function rSynth(c,k,t){
 function rRadial(c,k,t){
   base(.3);const x=BW/2,y=BH/2,R=Math.min(BW,BH)*.22,N=120;bx.lineCap='round';
   for(let i=0;i<N;i++){const m=i<N/2?i:N-1-i,v=sp(m,N/2),a=t*.25+i/N*6.283,r0=R*(1+k*.15),r1=r0+R*(.12+v*1.5);
-    bx.strokeStyle=`rgba(${c[Math.floor(i/N*c.length)]},${.45+v*.55})`;bx.lineWidth=Math.max(2,BW/N*.9);
+    bx.strokeStyle=`rgba(${c[Math.floor(i/N*c.length)]},${.45+v*.55})`;bx.lineWidth=Math.max(2,6.283*R/N*.6);
     bx.beginPath();bx.moveTo(x+Math.cos(a)*r0,y+Math.sin(a)*r0);bx.lineTo(x+Math.cos(a)*r1,y+Math.sin(a)*r1);bx.stroke()}
   const g=bx.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,`rgba(${c[0]},${.15+k*.5})`);g.addColorStop(1,`rgba(${c[0]},0)`);bx.fillStyle=g;bx.beginPath();bx.arc(x,y,R,0,6.283);bx.fill();
 }
@@ -376,30 +377,27 @@ const lc=document.createElement('canvas'),lx=lc.getContext('2d');
 function rLava(c,k,t){
   const w=Math.ceil(BW/4),h=Math.ceil(BH/4);if(lc.width!==w||lc.height!==h){lc.width=w;lc.height=h}
   lx.fillStyle='#000';lx.fillRect(0,0,w,h);
-  for(let i=0;i<8;i++){const x=w*(.5+.4*Math.sin(t*.21+i*2.1)),y=h*(.5+.42*Math.sin(t*.17+i*1.3+Math.cos(t*.1+i))),r=h*(.16+.07*Math.sin(t*.5+i))*(1+k*.5+sp(i*4,40)*.4);
+  for(let i=0;i<8;i++){const x=w*(.5+.4*Math.sin(t*.21+i*2.1)),y=h*(.5+.42*Math.sin(t*.17+i*1.3+Math.cos(t*.1+i))),r=Math.min(w,h)*(.26+.1*Math.sin(t*.5+i))*(1+k*.5+sp(i*4,40)*.4);
     const g=lx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgb(${c[i%c.length]})`);g.addColorStop(1,'rgba(0,0,0,0)');lx.fillStyle=g;lx.beginPath();lx.arc(x,y,r,0,6.283);lx.fill()}
   base(1);const gg=bx.createLinearGradient(0,0,0,BH);gg.addColorStop(0,`rgba(${c[0]},.28)`);gg.addColorStop(1,`rgba(${c[c.length-1]},.38)`);bx.fillStyle=gg;bx.fillRect(0,0,BW,BH);
   bx.filter='blur(4px) contrast(12)';bx.globalCompositeOperation='lighter';bx.drawImage(lc,0,0,BW,BH);bx.filter='none';bx.globalCompositeOperation='source-over';
 }
-// night skyline: buildings bounce with their own frequency band, windows light up with the energy, moon pulses
-function rCity(c,k,t,beat,edge,now){
-  if(!city){city={b:[],s:Array.from({length:80},()=>[Math.random(),Math.random()*.55,Math.random()])};let x=0;
-    while(x<1){const w=.035+Math.random()*.05;city.b.push({x,w:Math.min(w,1-x),h:.12+Math.random()*.32,seed:Math.random()*50});x+=w}}
-  const W=BW,H=BH;base(1);let g=bx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgb(5,5,20)');g.addColorStop(1,`rgb(${c[0]})`);bx.globalAlpha=.8;bx.fillStyle=g;bx.fillRect(0,0,W,H);bx.globalAlpha=1;
-  for(const s of city.s){bx.fillStyle=`rgba(255,255,255,${.3+.5*Math.abs(Math.sin(t*s[2]*3+s[0]*9))})`;bx.fillRect(s[0]*W,s[1]*H,2,2)}
-  const mx=W*.8,my=H*.17,mr=H*.055*(1+k*.15),mg=bx.createRadialGradient(mx,my,mr*.5,mx,my,mr*4);mg.addColorStop(0,`rgba(${c[2]},${.35+k*.4})`);mg.addColorStop(1,`rgba(${c[2]},0)`);
-  bx.fillStyle=mg;bx.fillRect(mx-mr*4,my-mr*4,mr*8,mr*8);bx.fillStyle=`rgb(${c[2]})`;bx.beginPath();bx.arc(mx,my,mr,0,6.283);bx.fill();
-  const ws=Math.max(5,W*.009),fl=Math.floor(now/450);
-  city.b.forEach((b,i)=>{const v=sp(i,city.b.length),hh=H*(b.h+v*.1),x0=b.x*W,w=b.w*W;
-    bx.fillStyle='rgb(8,8,18)';bx.fillRect(x0,H-hh,w-1,hh);
-    for(let wy=H-hh+ws;wy<H-ws;wy+=ws*1.8)for(let wx=x0+ws*.5;wx<x0+w-ws*1.4;wx+=ws*1.6){
-      const hsh=Math.abs((Math.sin(b.seed*91+wx*.129+wy*.782+(Math.sin(wx*7+wy)>.9?fl:0))*43758.5)%1);
-      if(hsh<.2+v*.6+beat*.15){bx.fillStyle=hsh<.1?`rgb(${c[1]})`:`rgba(${c[2]},.85)`;bx.fillRect(wx,wy,ws,ws*1.1)}}});
+// thousands of particles riding a slowly twisting vector field, leaving long glowing trails; beats whip them faster
+let flow=null;
+function rFlow(c,k,t,beat){
+  if(!flow||flow.length!==Math.round(BW*BH/700))flow=Array.from({length:Math.round(BW*BH/700)},()=>({x:Math.random()*BW,y:Math.random()*BH,c:Math.floor(Math.random()*c.length)}));
+  bx.globalCompositeOperation='source-over';bx.fillStyle='rgba(5,5,10,.07)';bx.fillRect(0,0,BW,BH);
+  bx.globalCompositeOperation='lighter';const u=U(),sc=3.2/u,v0=u*.004*(1+k*3+beat*3),tw=1+k*.5;bx.lineWidth=Math.max(1,u*.0028);
+  for(const p of flow){
+    const a=(Math.sin(p.x*sc*tw+t*.25)*3+Math.cos(p.y*sc*1.3-t*.2)*3+Math.sin((p.x+p.y)*sc*.7+t*.1)*2),nx=p.x+Math.cos(a)*v0,ny=p.y+Math.sin(a)*v0;
+    bx.strokeStyle=`rgba(${c[p.c%c.length]},${.22+k*.45})`;bx.beginPath();bx.moveTo(p.x,p.y);bx.lineTo(nx,ny);bx.stroke();p.x=nx;p.y=ny;
+    if(p.x<0||p.x>BW||p.y<0||p.y>BH||Math.random()<.004){p.x=Math.random()*BW;p.y=Math.random()*BH}}
+  bx.globalCompositeOperation='source-over';
 }
 // digital rain, columns speed up on beats
 const KANA='ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾅ01234789Z:.=*+-<>';
 function rMatrix(c,k,t,beat){
-  const fs=Math.max(12,Math.round(BW/60)),n=Math.ceil(BW/fs);
+  const fs=Math.max(12,Math.round(U()/38)),n=Math.ceil(BW/fs);
   if(!cols||cols.length!==n)cols=Array.from({length:n},()=>({y:Math.random()*BH,s:.5+Math.random()*1.2}));
   bx.globalCompositeOperation='source-over';bx.fillStyle='rgba(3,7,5,.14)';bx.fillRect(0,0,BW,BH);
   if(beat>.5){bx.fillStyle=`rgba(${c[0]},${beat*.06})`;bx.fillRect(0,0,BW,BH)}
@@ -429,15 +427,15 @@ function rAurora(c,k,t){
   bx.globalAlpha=1;bx.globalCompositeOperation='source-over';
 }
 // thunderstorm over water: rain, ripples on every beat, lightning bolts on the hard hits
-function makeBolt(){const pts=[];let x=BW*(.15+Math.random()*.7),y=0;while(y<BH*.56){pts.push([x,y]);x+=(Math.random()-.5)*BW*.07;y+=BH*(.02+Math.random()*.04)}return pts}
+function makeBolt(){const pts=[];let x=BW*(.15+Math.random()*.7),y=0;while(y<BH*.56){pts.push([x,y]);x+=(Math.random()-.5)*U()*.1;y+=BH*(.02+Math.random()*.04)}return pts}
 function rStorm(c,k,t,beat,edge){
   base(1);const g=bx.createLinearGradient(0,0,0,BH);g.addColorStop(0,'rgb(6,8,18)');g.addColorStop(.54,`rgba(${c[0]},.55)`);g.addColorStop(.56,'rgb(5,8,16)');g.addColorStop(1,'rgb(3,5,10)');bx.fillStyle=g;bx.fillRect(0,0,BW,BH);
   if(edge){ripp.push({x:BW*(.1+Math.random()*.8),y:BH*(.6+Math.random()*.36),r:2,a:1});if(k>.55&&Math.random()<.6){flash=1;bolt=makeBolt()}}
   if(Math.random()<.12+k*.4)ripp.push({x:BW*Math.random(),y:BH*(.58+Math.random()*.4),r:1,a:.6});
-  if(!drops)drops=Array.from({length:150},()=>({x:Math.random()*BW,y:Math.random()*BH,s:.6+Math.random()*.8}));
-  bx.strokeStyle=`rgba(${c[1]},.28)`;bx.lineWidth=1;bx.beginPath();const sp0=BH/60*(1+k*1.5);
-  for(const d of drops){d.y+=sp0*d.s;d.x-=sp0*d.s*.15;if(d.y>BH||d.x<0){d.y=-10;d.x=Math.random()*BW*1.1}bx.moveTo(d.x,d.y);bx.lineTo(d.x-BH*.004,d.y+BH*.025)}bx.stroke();
-  for(const o of ripp){o.r+=BW*.005*(1+k);o.a-=.014;if(o.a>0){bx.strokeStyle=`rgba(${c[1]},${o.a*.8})`;bx.lineWidth=1.5;bx.beginPath();bx.ellipse(o.x,o.y,o.r,o.r*.28,0,0,6.283);bx.stroke()}}
+  if(!drops||drops.length!==Math.round(BW*BH/1500))drops=Array.from({length:Math.round(BW*BH/1500)},()=>({x:Math.random()*BW,y:Math.random()*BH,s:.6+Math.random()*.8}));
+  bx.strokeStyle=`rgba(${c[1]},.28)`;bx.lineWidth=Math.max(1,U()*.003);bx.beginPath();const sp0=U()*.029*(1+k*1.5);
+  for(const d of drops){d.y+=sp0*d.s;d.x-=sp0*d.s*.15;if(d.y>BH||d.x<0){d.y=-10;d.x=Math.random()*BW*1.1}bx.moveTo(d.x,d.y);bx.lineTo(d.x-U()*.006,d.y+U()*.04)}bx.stroke();
+  for(const o of ripp){o.r+=U()*.006*(1+k);o.a-=.014;if(o.a>0){bx.strokeStyle=`rgba(${c[1]},${o.a*.8})`;bx.lineWidth=Math.max(1.5,U()*.003);bx.beginPath();bx.ellipse(o.x,o.y,o.r,o.r*.28,0,0,6.283);bx.stroke()}}
   ripp=ripp.filter(o=>o.a>0);
   if(flash>.03){bx.fillStyle=`rgba(200,215,255,${flash*.3})`;bx.fillRect(0,0,BW,BH);
     if(bolt){bx.strokeStyle=`rgba(240,245,255,${flash})`;bx.lineWidth=2+flash*4;bx.beginPath();bolt.forEach((p,i)=>i?bx.lineTo(p[0],p[1]):bx.moveTo(p[0],p[1]));bx.stroke()}
@@ -447,20 +445,22 @@ function rStorm(c,k,t,beat,edge){
 function rFire(c,k,t,beat,edge){
   base(.22);bx.globalCompositeOperation='lighter';
   if(edge||Math.random()<.008)rk.push({x:BW*(.15+Math.random()*.7),y:BH,vy:-BH*(.013+Math.random()*.005+k*.004),tx:BH*(.12+Math.random()*.35),col:c[Math.floor(Math.random()*c.length)]});
-  rk=rk.filter(o=>{o.y+=o.vy;o.vy*=.985;bx.fillStyle=`rgb(${o.col})`;bx.fillRect(o.x,o.y,3,10);
-    if(o.y<o.tx||o.vy>-2){const n=40+Math.floor(k*50);for(let i=0;i<n;i++){const a=Math.random()*6.283,v0=Math.sqrt(Math.random())*BW*.012*(1+k);sparks.push({x:o.x,y:o.y,vx:Math.cos(a)*v0,vy:Math.sin(a)*v0,l:1,col:o.col})}return false}return true});
-  sparks=sparks.filter(p=>{const px=p.x,py=p.y;p.vy+=.12;p.vx*=.985;p.vy*=.985;p.x+=p.vx;p.y+=p.vy;p.l-=.012;
-    bx.strokeStyle=`rgba(${p.col},${Math.max(0,p.l)})`;bx.lineWidth=2;bx.beginPath();bx.moveTo(px,py);bx.lineTo(p.x,p.y);bx.stroke();return p.l>0});
+  rk=rk.filter(o=>{o.y+=o.vy;o.vy*=.985;bx.fillStyle=`rgb(${o.col})`;bx.fillRect(o.x,o.y,Math.max(3,U()*.005),U()*.015);
+    if(o.y<o.tx||o.vy>-2){const n=40+Math.floor(k*50);for(let i=0;i<n;i++){const a=Math.random()*6.283,v0=Math.sqrt(Math.random())*U()*.017*(1+k);sparks.push({x:o.x,y:o.y,vx:Math.cos(a)*v0,vy:Math.sin(a)*v0,l:1,col:o.col})}return false}return true});
+  sparks=sparks.filter(p=>{const px=p.x,py=p.y;p.vy+=U()*.00017;p.vx*=.985;p.vy*=.985;p.x+=p.vx;p.y+=p.vy;p.l-=.012;
+    bx.strokeStyle=`rgba(${p.col},${Math.max(0,p.l)})`;bx.lineWidth=Math.max(1.5,U()*.003);bx.beginPath();bx.moveTo(px,py);bx.lineTo(p.x,p.y);bx.stroke();return p.l>0});
   if(sparks.length>2500)sparks.splice(0,sparks.length-2500);
   bx.globalCompositeOperation='source-over';
 }
 // classic demoscene plasma on a tiny canvas, scaled up; palette cycles and the field speeds up on beats
-const pc=document.createElement('canvas');pc.width=96;pc.height=54;const pcx=pc.getContext('2d'),pimg=pcx.createImageData(96,54);
+const pc=document.createElement('canvas'),pcx=pc.getContext('2d');let pimg=null;
 function rPlasma(c,k,t,beat){
+  const ph=60,pw=Math.max(34,Math.round(ph*BW/BH));
+  if(!pimg||pc.width!==pw){pc.width=pw;pc.height=ph;pimg=pcx.createImageData(pw,ph)}
   const cl=c.map(rgbA),n=cl.length,d=pimg.data,s1=t*(1+beat*1.5),br=.35+k*.6;
-  for(let y=0;y<54;y++)for(let x=0;x<96;x++){
-    const v=Math.sin(x*.13+s1)+Math.sin(y*.17-s1*1.3)+Math.sin((x+y)*.09+s1*.7)+Math.sin(Math.hypot(x-48,y-27)*.16-s1*1.6),
-      u=(v+4)/8*n+t*.15,i0=Math.floor(u),f=u-i0,a=cl[i0%n],b=cl[(i0+1)%n],o=(y*96+x)*4;
+  for(let y=0;y<ph;y++)for(let x=0;x<pw;x++){
+    const v=Math.sin(x*.13+s1)+Math.sin(y*.17-s1*1.3)+Math.sin((x+y)*.09+s1*.7)+Math.sin(Math.hypot(x-pw/2,y-ph/2)*.16-s1*1.6),
+      u=(v+4)/8*n+t*.15,i0=Math.floor(u),f=u-i0,a=cl[i0%n],b=cl[(i0+1)%n],o=(y*pw+x)*4;
     d[o]=(a[0]+(b[0]-a[0])*f)*br;d[o+1]=(a[1]+(b[1]-a[1])*f)*br;d[o+2]=(a[2]+(b[2]-a[2])*f)*br;d[o+3]=255}
   pcx.putImageData(pimg,0,0);bx.globalCompositeOperation='source-over';bx.imageSmoothingEnabled=true;bx.drawImage(pc,0,0,BW,BH);
 }
@@ -469,8 +469,8 @@ function rEmbers(c,k,t,beat,edge,now,playing){
   base(.3);bx.globalCompositeOperation='lighter';
   const g=bx.createLinearGradient(0,BH,0,BH*.5);g.addColorStop(0,`rgba(${c[0]},${.25+k*.5})`);g.addColorStop(1,`rgba(${c[0]},0)`);bx.fillStyle=g;bx.fillRect(0,BH*.5,BW,BH*.5);
   const n=(playing?2:1)+Math.floor(k*6)+(edge?40:0);
-  for(let i=0;i<n&&em.length<700;i++)em.push({x:Math.random()*BW,y:BH+5,vx:(Math.random()-.5)*1.2,vy:-(1+Math.random()*2.5)*(1+k*2)*BH/700,l:1,r:(1+Math.random()*3)*BW/700,col:c[Math.floor(Math.random()*c.length)],ph:Math.random()*6});
-  em=em.filter(p=>{p.x+=p.vx+Math.sin(t*2+p.ph)*.6;p.y+=p.vy;p.l-=.006;if(p.l<=0)return false;
+  for(let i=0;i<n&&em.length<700;i++)em.push({x:Math.random()*BW,y:BH+5,vx:(Math.random()-.5)*1.2,vy:-(1+Math.random()*2.5)*(1+k*2)*U()/700,l:1,r:(1+Math.random()*3)*U()/700,col:c[Math.floor(Math.random()*c.length)],ph:Math.random()*6});
+  em=em.filter(p=>{p.x+=p.vx+Math.sin(t*2+p.ph)*.6*U()/700;p.y+=p.vy;p.l-=.006;if(p.l<=0)return false;
     bx.fillStyle=`rgba(${p.col},${p.l*.15})`;bx.beginPath();bx.arc(p.x,p.y,p.r*4,0,6.283);bx.fill();
     bx.fillStyle=`rgba(255,${200+55*p.l|0},150,${p.l})`;bx.beginPath();bx.arc(p.x,p.y,p.r,0,6.283);bx.fill();return true});
   bx.globalCompositeOperation='source-over';
@@ -497,13 +497,13 @@ function rWaves(c,k,t){
 }
 // retro LED spectrum matrix with falling peak dots
 function rPixel(c,k){
-  base(1);const n=32,cell=BW/n,rows=Math.floor(BH/cell),pad=cell*.12;
+  base(1);const cell=U()/26,n=Math.floor(BW/cell),rows=Math.floor(BH/cell),pad=cell*.12;
   for(let i=0;i<n;i++){const lit=Math.round(sp(i,n)*rows*.95);peaks[i]=Math.max(lit,(peaks[i]||0)-.25);
     for(let r=0;r<rows;r++){const f=r/rows,col=f<.5?c[0]:f<.8?c[1%c.length]:c[2%c.length];
       bx.fillStyle=r<lit?`rgba(${col},.88)`:'rgba(255,255,255,.04)';bx.fillRect(i*cell+pad,BH-(r+1)*cell+pad,cell-pad*2,cell-pad*2)}
     const pr=Math.floor(peaks[i]);if(pr<rows){bx.fillStyle='rgba(255,255,255,.9)';bx.fillRect(i*cell+pad,BH-(pr+1)*cell+pad,cell-pad*2,cell-pad*2)}}
 }
-const RND={blobs:rBlobs,stars:rStars,life:rLife,synth:rSynth,radial:rRadial,tunnel:rTunnel,lava:rLava,city:rCity,matrix:rMatrix,kaleido:rKaleido,aurora:rAurora,storm:rStorm,fire:rFire,plasma:rPlasma,embers:rEmbers,scope:rScope,waves:rWaves,pixel:rPixel};
+const RND={blobs:rBlobs,stars:rStars,life:rLife,synth:rSynth,radial:rRadial,tunnel:rTunnel,lava:rLava,flow:rFlow,matrix:rMatrix,kaleido:rKaleido,aurora:rAurora,storm:rStorm,fire:rFire,plasma:rPlasma,embers:rEmbers,scope:rScope,waves:rWaves,pixel:rPixel};
 
 // ---------- audio analysis + render loop ----------
 let an,fd,td,avg=0,beat=0,pulse=0,bassE=0,rgb='255,77,109';
