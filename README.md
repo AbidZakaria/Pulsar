@@ -21,3 +21,8 @@ into `release\Pulsar.exe`. It expects `Microsoft.Web.WebView2.Core.dll`, `Micros
 in `native\lib` (get them from the `Microsoft.Web.WebView2` NuGet package; they are not committed).
 
 
+
+## License
+[MIT](LICENSE) - (c) 2026 Abid Zakaria. You're free to use, modify and share Pulsar, as long as you keep the copyright notice and license text (i.e. credit the original author).
+
+Third-party pieces: the app uses Microsoft WebView2 (Microsoft's own license). The optional downloader uses yt-dlp (Unlicense) and ffmpeg (GPL/LGPL), which the installer downloads from their official sites rather than bundling them.

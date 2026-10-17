@@ -28,19 +28,25 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .meta>div{flex:1;min-width:0}
 h2{margin:0;font-size:21px;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #sub{color:var(--dim);font-size:14px;min-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#like{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.1);font-size:18px;transition:transform .15s,background .2s;flex:none}
-#like:hover{background:rgba(255,255,255,.2)}#like.pop{animation:pop .45s}
-@keyframes pop{40%{transform:scale(1.35);background:var(--ac)}}
+#like{display:flex;align-items:center;gap:8px;padding:6px 13px 6px 10px;border-radius:22px;background:rgba(255,255,255,.1);text-align:left;transition:transform .15s,background .2s;flex:none;max-width:46%}
+#like:hover{background:rgba(255,255,255,.2)}#like.pop{animation:pop .5s}
+#like svg{width:20px;height:20px;fill:currentColor;flex:none}
+#like b{display:block;font-size:12px;line-height:1.15}#like small{display:block;font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
+@keyframes pop{40%{transform:scale(1.12);background:var(--ac)}}
 .time{display:flex;justify-content:space-between;color:var(--dim);font-size:12px;margin-top:3px;flex:none}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:4px;outline:none;margin:8px 0;
   background:linear-gradient(to right,var(--ac) var(--p,0%),rgba(255,255,255,.18) var(--p,0%))}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(var(--acrgb),.5);transition:box-shadow .15s}
 input[type=range]:hover::-webkit-slider-thumb,input[type=range]:active::-webkit-slider-thumb{box-shadow:0 0 0 7px rgba(var(--acrgb),.28)}
-.ctl{display:flex;gap:10px;justify-content:center;align-items:center;margin:6px 0 4px;flex:none}
-.ctl button{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);font-size:17px;transition:transform .12s,background .2s}
-.ctl button:hover{background:rgba(255,255,255,.24)}.ctl button:active{transform:scale(.88)}
-.ctl #play{width:62px;height:62px;font-size:23px;background:#fff;color:#000}.ctl #play:hover{background:#fff}
-.ctl #mode{width:auto;padding:0 16px;border-radius:23px;font-size:13px;font-weight:600}
+svg.i{width:22px;height:22px;fill:currentColor;display:block}
+.ctl{display:flex;align-items:flex-start;justify-content:center;gap:12px;margin:8px 0 6px;flex:none}
+.cb{display:flex;flex-direction:column;align-items:center;gap:5px;background:none;color:rgba(255,255,255,.6);font-size:11px;font-weight:600;width:62px;transition:color .2s}
+.cb .c{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;transition:background .2s,transform .12s,box-shadow .2s}
+.cb:hover{color:#fff}.cb:hover .c{background:rgba(255,255,255,.22)}.cb:active .c{transform:scale(.88)}
+.cb.on{color:#fff}.cb.on .c{background:var(--ac);box-shadow:0 0 20px rgba(var(--acrgb),.6)}
+.cb.big .c{width:60px;height:60px;background:rgba(255,255,255,.15)}.cb.big svg.i{width:28px;height:28px}
+.cb.main{width:84px}.cb.main .c{width:78px;height:78px;background:#fff;color:#000;box-shadow:0 0 calc(18px + var(--b)*50px) rgba(var(--acrgb),calc(.3 + var(--b)*.5))}
+.cb.main svg.i{width:36px;height:36px}.cb.main:hover .c{background:#fff;transform:scale(1.05)}
 .panel{background:var(--glass);backdrop-filter:blur(18px);border-radius:16px;padding:4px 14px;flex:none}
 .row{display:flex;align-items:center;gap:10px}.row label{min-width:62px;color:var(--dim);font-size:13px}.row span{min-width:36px;text-align:right;color:var(--dim);font-size:13px}
 #q{width:100%;padding:12px 14px;border-radius:12px;border:0;background:var(--glass);backdrop-filter:blur(18px);color:#fff;font-size:15px;margin-bottom:8px;outline:none;flex:none}
@@ -82,10 +88,16 @@ h3{margin:16px 0 8px;font-size:14px;color:var(--dim);font-weight:600}
   <div id="player" class="hide">
    <div id="artbox"><img id="art" alt=""></div>
    <canvas id="viz"></canvas>
-   <div class="meta"><div><h2 id="title">-</h2><div id="sub"></div></div><button id="like" title="I like this visual style">♥</button></div>
+   <div class="meta"><div><h2 id="title">-</h2><div id="sub"></div></div><button id="like" title="Tell Pulsar you like this background look (not the song)"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg><span><b>Like this look</b><small id="lname">-</small></span></button></div>
    <input type="range" id="seek" min="0" max="1000" value="0">
    <div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
-   <div class="ctl"><button id="prev">⏮</button><button id="play">▶</button><button id="next">⏭</button><button id="mode">Shuffle</button></div>
+   <div class="ctl">
+    <button class="cb" id="mode" title="Shuffle / play in order"><span class="c" id="modeic"></span><span id="modelbl">Shuffle</span></button>
+    <button class="cb big" id="prev" title="Previous"><span class="c"><svg class="i" viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12 18 6v12z"/></svg></span></button>
+    <button class="cb main" id="play" title="Play / pause"><span class="c" id="playic"></span></button>
+    <button class="cb big" id="next" title="Next"><span class="c"><svg class="i" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18V6l8.5 6z"/></svg></span></button>
+    <button class="cb" id="nextlook" title="Change the background look now"><span class="c"><svg class="i" viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8A5.87 5.87 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg></span><span>New look</span></button>
+   </div>
    <div class="panel">
     <div class="row"><label>Volume</label><input type="range" id="vol" min="0" max="100"><span id="volv"></span></div>
     <div class="row"><label>Explore</label><input type="range" id="exp" min="0" max="100"><span id="expv"></span></div>
@@ -202,7 +214,7 @@ async function playIdx(i,fromHist){
   const f=await files[i].get();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);A.src=url;
   await loudness(f);applyVol();
   const m=await meta(f);$('title').textContent=m.title;$('sub').textContent=m.artist;$('art').src=m.pic||NOART;
-  setStyle(pickStyle());
+  lookForSong();
   document.querySelectorAll('.li').forEach(e=>e.classList.toggle('now',+e.dataset.i===cur));
   ['title','sub'].forEach(id=>{const e=$(id);e.classList.remove('swap');void e.offsetWidth;e.classList.add('swap')});
   document.title=m.title;A.play().catch(()=>{});
@@ -215,13 +227,18 @@ function prev(){if(A.currentTime>3)A.currentTime=0;else if(tp>0){const i=idxOf(t
 const pick=first=>go(first&&cfg.mode==='seq'?0:chooseNext());
 $('next').onclick=next;$('prev').onclick=prev;
 $('play').onclick=()=>A.paused?A.play():A.pause();
-A.onplay=()=>$('play').textContent='⏸';A.onpause=()=>$('play').textContent='▶';
+const IC={play:'<svg class="i" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',pause:'<svg class="i" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+ shuf:'<svg class="i" viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>',
+ seq:'<svg class="i" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>'};
+const setPlay=on=>{$('playic').innerHTML=on?IC.pause:IC.play;$('bgc').style.opacity=on?1:.45};
+setPlay(false);
+A.onplay=()=>setPlay(true);A.onpause=()=>setPlay(false);
 A.onended=next;
 A.ontimeupdate=()=>{$('cur').textContent=fmt(A.currentTime);$('dur').textContent=fmt(A.duration);if(A.duration)$('seek').value=A.currentTime/A.duration*1000};
 $('seek').oninput=e=>A.currentTime=e.target.value/1000*A.duration;
 const sync=()=>{$('volv').textContent=cfg.vol+'%';$('expv').textContent=cfg.exp+'%';$('winv').textContent=cfg.win};
 $('mode').onclick=()=>{cfg.mode=cfg.mode==='seq'?'shuffle':'seq';setMode();save()};
-const setMode=()=>$('mode').textContent=cfg.mode==='seq'?'In order':'Shuffle';
+const setMode=()=>{const q=cfg.mode==='seq';$('modeic').innerHTML=q?IC.seq:IC.shuf;$('modelbl').textContent=q?'In order':'Shuffle';$('mode').classList.toggle('on',!q)};
 $('exp').oninput=e=>{cfg.exp=+e.target.value;sync();save()};
 $('win').oninput=e=>{cfg.win=+e.target.value;sync();save()};
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.target.type==='text')return;
@@ -281,18 +298,28 @@ const STY=[
  {n:'Deep Waves',r:'waves',p:['0,170,190','20,70,200','90,240,230']},
  {n:'LED Matrix',r:'pixel',p:['60,255,120','255,230,60','255,60,80']}
 ];
-const sScore=i=>{const s=sty[i];if(!s)return .6;const r=(s.log||[]).slice(-10);return Math.min(1,(r.reduce((a,b)=>a+b,0)+.6+(s.likes||0)*.5)/(r.length+1))};
+const sRet=i=>{const r=((sty[i]||{}).log||[]).slice(-10);return (r.reduce((a,b)=>a+b,0)+.6)/(r.length+1)};
+const sScoreOld=i=>{const s=sty[i];if(!s)return .6;const r=(s.log||[]).slice(-10);return Math.min(1,(r.reduce((a,b)=>a+b,0)+.6+(s.likes||0)*.5)/(r.length+1))};
+const sScore=i=>Math.min(1,sRet(i)+Math.min(5,(sty[i]||{}).likes||0)*.08);
+let styleLeft=0,snapc=document.createElement('canvas'),fadeT=0,shocks=[],forceEdge=false;
+function lookForSong(){   // a look stays for 2-3 songs, then glides into the next one
+  if(cfg.sm==='pin'){if(style!==cfg.sp||!styleLeft){setStyle(cfg.sp);styleLeft=1}return}
+  if(styleLeft<=0){setStyle(pickStyle());styleLeft=2+(Math.random()<.5?1:0)}
+  styleLeft--;
+}
+function look(){$('lname').textContent=STY[style].n}
 function pickStyle(){
   if(cfg.sm==='pin')return cfg.sp;
   const idx=STY.map((_,i)=>i);
   if(Math.random()<.25)return sample(idx,idx.map(i=>1/(1+(sty[i]?.log?.length||0)))); // explore less-seen styles
-  return sample(idx,idx.map(i=>Math.pow(sScore(i),3)));                              // exploit liked ones
+  return sample(idx,idx.map(i=>Math.pow(sRet(i),3)*(1+Math.min(5,(sty[i]||{}).likes||0)*1.5)));   // liked looks get up to ~8x the weight                              // exploit liked ones
 }
 const bgc=$('bgc'),bx=bgc.getContext('2d');let BW=1,BH=1,rings=[],stars=null,life=null,lastStep=0,hueCols=['255,77,109'];
 function fitBg(){const s=.7*(devicePixelRatio||1);BW=bgc.width=Math.ceil(innerWidth*s);BH=bgc.height=Math.ceil(innerHeight*s);life=null;stars=null}
 function setStyle(i){
   style=i;rings=[];stars=null;life=null;flow=null;cols=null;drops=null;ripp=[];flash=0;rk=[];sparks=[];em=[];peaks=[];
-  bgc.style.transition='none';bgc.style.opacity=0;void bgc.offsetWidth;bgc.style.transition='';bgc.style.opacity=1;
+  snapc.width=BW;snapc.height=BH;snapc.getContext('2d').drawImage(bgc,0,0);fadeT=1;   // old look fades out over the new one
+  look();
   document.querySelectorAll('.sw').forEach(e=>e.classList.toggle('on',+e.dataset.i===i));
 }
 const base=a=>{bx.globalCompositeOperation='source-over';bx.fillStyle=`rgba(7,7,10,${a})`;bx.fillRect(0,0,BW,BH)};
@@ -526,13 +553,17 @@ $('art').onload=()=>accentFrom($('art'));
 function frame(now){
   requestAnimationFrame(frame);const t=now/1000,playing=an&&!A.paused;let lo=0,cen=0,sum=0;
   if(playing){an.getByteFrequencyData(fd);an.getByteTimeDomainData(td);for(let i=0;i<4;i++)lo+=fd[i];lo/=1020;for(let i=0;i<fd.length;i++){cen+=i*fd[i];sum+=fd[i]}cen=sum?cen/sum/fd.length:0}
-  avg=avg*.95+lo*.05;let edge=false;if(lo>avg*1.18&&lo>.35&&beat<.5){edge=true;beat=1}
+  avg=avg*.95+lo*.05;let edge=false;if(lo>avg*1.18&&lo>.35&&beat<.5){edge=true;beat=1}if(forceEdge){edge=true;beat=1;forceEdge=false}
   beat*=.88;bassE=Math.max(lo,bassE*.9);pulse+=(Math.max(beat*.9,bassE*.6)-pulse)*.35;
   const k=Math.min(1,playing?pulse:pulse*.9),R=document.documentElement.style;R.setProperty('--b',k.toFixed(3));
   const s=STY[style]||STY[0];let c=s.p;
   if(s.dyn==='cover')c=[rgb,shift(rgb,55),shift(rgb,-55)];
   else if(s.dyn==='hue'){const h=(cen*420+t*18+beat*40)%360;c=[hsl(h,.9,.55),hsl(h+55,.9,.55),hsl(h+130,.9,.5)]}
   try{RND[s.r](c,k,t,beat,edge,now,playing)}catch(e){bx.filter='none';bx.globalAlpha=1;bx.globalCompositeOperation='source-over';rBlobs(c,k,t)}
+  if(fadeT>0){bx.globalAlpha=fadeT;bx.drawImage(snapc,0,0,BW,BH);bx.globalAlpha=1;fadeT=Math.max(0,fadeT-.009)}
+  for(const o of shocks){o.r+=U()*.03;o.a-=.022;if(o.a>0){bx.strokeStyle=`rgba(${rgb},${o.a*.9})`;bx.lineWidth=Math.max(2,U()*.012*o.a);bx.beginPath();bx.arc(o.x,o.y,o.r,0,6.283);bx.stroke();
+    bx.strokeStyle=`rgba(255,255,255,${o.a*.5})`;bx.lineWidth=Math.max(1,U()*.004*o.a);bx.beginPath();bx.arc(o.x,o.y,o.r*.8,0,6.283);bx.stroke()}}
+  shocks=shocks.filter(o=>o.a>0);
   if($('player').classList.contains('hide'))return;
   const art=$('art');art.style.transform=`scale(${1+k*.04})`;art.style.boxShadow=`0 18px ${40+k*70}px rgba(${rgb},${.2+k*.5})`;
   $('play').style.transform=`scale(${1+k*.08})`;
@@ -561,8 +592,13 @@ $('menu').onclick=e=>{if(e.target===$('menu'))$('menu').classList.remove('on')};
 $('mAuto').onclick=()=>{cfg.sm='auto';save();menuState();toast('Auto style: learning from what you like')};
 $('mPin').onclick=()=>{cfg.sm='pin';cfg.sp=style;save();menuState()};
 $('grid').onclick=e=>{const b=e.target.closest('.sw');if(!b)return;cfg.sm='pin';cfg.sp=+b.dataset.i;save();setStyle(cfg.sp);menuState()};
-$('like').onclick=()=>{(sty[style]||(sty[style]={log:[],likes:0})).likes=(sty[style].likes||0)+1;save();
-  const b=$('like');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');toast('Liked · '+STY[style].n)};
+$('like').onclick=()=>{const e=sty[style]||(sty[style]={log:[],likes:0});e.likes=(e.likes||0)+1;save();
+  const b=$('like');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');toast('Noted - you like the "'+STY[style].n+'" look. It will show up more.')};
+$('nextlook').onclick=()=>{let n=style,tries=0;while(n===style&&tries++<8)n=cfg.sm==='pin'?Math.floor(Math.random()*STY.length):pickStyle();
+  if(cfg.sm==='pin'){cfg.sm='auto';save()}styleLeft=2+(Math.random()<.5?1:0);setStyle(n)};
+// buttons poke the background: a shockwave from the button plus a forced "beat" so every look reacts in its own way
+function poke(el){const r=el.getBoundingClientRect();shocks.push({x:(r.left+r.width/2)/innerWidth*BW,y:(r.top+r.height/2)/innerHeight*BH,r:U()*.03,a:1});forceEdge=true;pulse=Math.max(pulse,.9)}
+['prev','play','next','mode','nextlook','like','art'].forEach(id=>$(id).addEventListener('click',()=>poke($(id))));
 $('win').oninput=e=>{cfg.win=+e.target.value;sync();save()};
 
 // ---------- downloads (handled by the native app, which runs yt-dlp) ----------
@@ -602,6 +638,6 @@ window.__selftest=()=>{ // debug: run every renderer with fake audio and report 
     try{for(let f=0;f<6;f++)RND[s.r](c,.6,f*.3,.8,f%2===0,performance.now()+f*200,true)}catch(e){err=e.message}
     const d=bx.getImageData(0,0,BW,BH).data;let sum=0,n=0;for(let j=0;j<d.length;j+=388){sum+=d[j]+d[j+1]+d[j+2];n++}
     out.push(i+' '+s.n+': '+(err||'ok')+' lum='+Math.round(sum/n/3))});
-  return out.join(' | ')};
+  return ($('title').textContent+' ## '+$('sub').textContent+' ## look='+$('lname').textContent+' ## tp='+tp+' left='+styleLeft+' ## ')+out.join(' | ')};
 setStyle(cfg.sm==='pin'?cfg.sp:0);
 </script></body></html>
