@@ -137,7 +137,7 @@ class MainForm : Form
             var t = new Timer(); t.Interval = 8000;
             t.Tick += async delegate {
                 t.Stop();
-                var r = await c.ExecuteScriptAsync("document.getElementById('title').textContent+' | '+document.getElementById('sub').textContent+' | '+document.getElementById('open').textContent+' | '+document.title+' | '+window.__a+' | '+window.__b");
+                var r = await c.ExecuteScriptAsync("(window.__selftest?window.__selftest():'no selftest')");
                 File.WriteAllText(Path.Combine(dataDir, "debug.txt"), r);
             };
             t.Start();
