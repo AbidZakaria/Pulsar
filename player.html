@@ -1,5 +1,5 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Pulsar</title>
 <style>
 :root{--ac:#ff4d6d;--acrgb:255,77,109;--b:0;--dim:rgba(255,255,255,.55);--glass:rgba(10,10,14,.46)}
@@ -8,7 +8,7 @@ html{background:#07070a}html,body{height:100%;margin:0;overflow:hidden;color:#f2
 button{font:inherit;color:inherit;border:0;cursor:pointer}
 #bgc{position:fixed;inset:0;width:100%;height:100%;z-index:-2;opacity:1;transition:opacity .9s ease}
 .shade{position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 40%,rgba(0,0,0,0) 0%,rgba(0,0,0,.55) 100%),linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.45));pointer-events:none}
-.wrap{height:100%;max-width:560px;margin:0 auto;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.wrap{height:100%;max-width:560px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
 .hide{display:none!important}
 .tabs{display:flex;gap:4px;padding:4px;background:var(--glass);backdrop-filter:blur(18px);border-radius:14px;flex:none}
 .tabs button{flex:1;padding:9px 0;background:transparent;color:rgba(255,255,255,.62);border-radius:10px;font-weight:600;transition:background .2s,color .2s}
@@ -47,6 +47,14 @@ svg.i{width:22px;height:22px;fill:currentColor;display:block}
 .cb.big .c{width:60px;height:60px;background:rgba(255,255,255,.15)}.cb.big svg.i{width:28px;height:28px}
 .cb.main{width:84px}.cb.main .c{width:78px;height:78px;background:#fff;color:#000;box-shadow:0 0 calc(18px + var(--b)*50px) rgba(var(--acrgb),calc(.3 + var(--b)*.5))}
 .cb.main svg.i{width:36px;height:36px}.cb.main:hover .c{background:#fff;transform:scale(1.05)}
+.seg{display:flex;background:var(--glass);backdrop-filter:blur(18px);border-radius:14px;padding:3px;gap:3px;margin:8px 0 2px;flex:none}
+.seg button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 4px;border-radius:11px;background:none;color:rgba(255,255,255,.65);font-weight:600;font-size:13px;transition:background .2s,color .2s}
+.seg button svg{width:16px;height:16px;fill:currentColor;flex:none}.seg button:hover{color:#fff}
+.seg button.on{background:rgba(255,255,255,.2);color:#fff}.seg button[data-m=hype].on{background:var(--ac)}
+#modehint{text-align:center;color:var(--dim);font-size:12px;padding:3px 0 0;min-height:19px;flex:none}
+.iconbtn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none;color:#fff;transition:background .2s,transform .12s}
+.iconbtn:hover{background:rgba(255,255,255,.22)}.iconbtn:active{transform:scale(.9)}.iconbtn svg{width:19px;height:19px;fill:currentColor}
+.ctl{gap:22px!important;align-items:center!important}
 .panel{background:var(--glass);backdrop-filter:blur(18px);border-radius:16px;padding:4px 14px;flex:none}
 .row{display:flex;align-items:center;gap:10px}.row label{min-width:62px;color:var(--dim);font-size:13px}.row span{min-width:36px;text-align:right;color:var(--dim);font-size:13px}
 #q{width:100%;padding:12px 14px;border-radius:12px;border:0;background:var(--glass);backdrop-filter:blur(18px);color:#fff;font-size:15px;margin-bottom:8px;outline:none;flex:none}
@@ -88,19 +96,25 @@ h3{margin:16px 0 8px;font-size:14px;color:var(--dim);font-weight:600}
   <div id="player" class="hide">
    <div id="artbox"><img id="art" alt=""></div>
    <canvas id="viz"></canvas>
-   <div class="meta"><div><h2 id="title">-</h2><div id="sub"></div></div><button id="like" title="Tell Pulsar you like this background look (not the song)"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg><span><b>Like this look</b><small id="lname">-</small></span></button></div>
+   <div class="meta"><div><h2 id="title">-</h2><div id="sub"></div></div>
+    <button id="like" title="Tell Pulsar you like this background look (not the song)"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg><span><b>Like this look</b><small id="lname">-</small></span></button>
+    <button id="nextlook" class="iconbtn" title="Change the background look now"><svg viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8A5.87 5.87 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg></button></div>
    <input type="range" id="seek" min="0" max="1000" value="0">
    <div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
    <div class="ctl">
-    <button class="cb" id="mode" title="Shuffle / play in order"><span class="c" id="modeic"></span><span id="modelbl">Shuffle</span></button>
-    <button class="cb big" id="prev" title="Previous"><span class="c"><svg class="i" viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12 18 6v12z"/></svg></span></button>
-    <button class="cb main" id="play" title="Play / pause"><span class="c" id="playic"></span></button>
-    <button class="cb big" id="next" title="Next"><span class="c"><svg class="i" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18V6l8.5 6z"/></svg></span></button>
-    <button class="cb" id="nextlook" title="Change the background look now"><span class="c"><svg class="i" viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8A5.87 5.87 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg></span><span>New look</span></button>
+    <button class="cb big" id="prev" title="Previous (Left arrow)"><span class="c"><svg class="i" viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12 18 6v12z"/></svg></span></button>
+    <button class="cb main" id="play" title="Play / pause (Space)"><span class="c" id="playic"></span></button>
+    <button class="cb big" id="next" title="Next (Right arrow)"><span class="c"><svg class="i" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18V6l8.5 6z"/></svg></span></button>
    </div>
+   <div class="seg" id="seg">
+    <button data-m="shuffle" title="Random songs - the ones you finish come up more"><svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>Shuffle</button>
+    <button data-m="seq" title="Play your library in order"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>In order</button>
+    <button data-m="hype" title="Hype mode: only your top songs, only the parts you usually listen to - no button pressing"><svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>Hype</button>
+   </div>
+   <div id="modehint"></div>
    <div class="panel">
-    <div class="row"><label>Volume</label><input type="range" id="vol" min="0" max="100"><span id="volv"></span></div>
-    <div class="row"><label>Explore</label><input type="range" id="exp" min="0" max="100"><span id="expv"></span></div>
+    <div class="row"><label title="Your master volume - Pulsar keeps every song and every part at this same loudness">Volume</label><input type="range" id="vol" min="0" max="100"><span id="volv"></span></div>
+    <div class="row"><label title="Low: replay your favorites. High: try less-played songs.">Explore</label><input type="range" id="exp" min="0" max="100"><span id="expv"></span></div>
    </div>
   </div>
  </div>
@@ -128,7 +142,9 @@ h3{margin:16px 0 8px;font-size:14px;color:var(--dim);font-weight:600}
  <div class="row"><label style="min-width:62px;color:var(--dim)">Memory</label><input type="range" id="win" min="1" max="30"><span id="winv"></span></div>
  <div class="hint">How many of a song's most recent plays count toward its score. All history is still saved.</div>
  <h5>Playback</h5>
- <div class="hint">Volume is automatic: every song is loudness-measured and set to your learned level. Nudge the slider on a song that's off and it remembers. Explore: low = favor songs you usually finish, high = give less-played songs a chance (Shuffle only).</div>
+ <button class="pill" id="lvlbtn">Auto-level volume</button>
+ <div class="hint">Keeps every song - and every part of a song - at the same loudness as the volume you set, within reason (never more than +/-9 dB). Turn it off to hear songs exactly as mastered.</div>
+ <div class="hint"><b>Explore</b>: low = replay what you usually finish, high = try less-played songs (Shuffle only).<br><b>Hype</b>: plays your top songs in order of how much you like them, jumping straight to the part you usually listen to before skipping - and moves on by itself. It learns those parts from how you listen.</div>
  <button class="pill hide" id="chg">📁 Change music folder</button>
 </div></div>
 <div id="toast"></div>
@@ -137,24 +153,25 @@ h3{margin:16px 0 8px;font-size:14px;color:var(--dim);font-weight:600}
 const $=i=>document.getElementById(i),A=$('a');
 let files=[],stats={},cfg={vol:70,exp:30,win:5,mode:'shuffle',sm:'auto',sp:0},cur=-1,trail=[],tp=-1,url=null,style=0;
 try{Object.assign(cfg,JSON.parse(localStorage.cfg||'{}'));stats=JSON.parse(localStorage.stats||'{}')}catch(e){}
-let lv={},sty={};try{lv=JSON.parse(localStorage.lv||'{}');sty=JSON.parse(localStorage.sty||'{}')}catch(e){}
-const save=()=>{localStorage.cfg=JSON.stringify(cfg);localStorage.stats=JSON.stringify(stats);localStorage.lv=JSON.stringify(lv);localStorage.sty=JSON.stringify(sty)};
+let lv={},sty={},heat={};try{lv=JSON.parse(localStorage.lv||'{}');sty=JSON.parse(localStorage.sty||'{}');heat=JSON.parse(localStorage.heat||'{}')}catch(e){}
+const save=()=>{localStorage.cfg=JSON.stringify(cfg);localStorage.stats=JSON.stringify(stats);localStorage.lv=JSON.stringify(lv);localStorage.sty=JSON.stringify(sty);localStorage.heat=JSON.stringify(heat)};
 const fmt=s=>isFinite(s)?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'0:00';
 const clean=n=>n.replace(/\.[^.]+$/,'').replace(/^\d+ - /,'');
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),1800)};
 
 // ---------- loading music ----------
-const NATIVE=!!(window.chrome&&chrome.webview);
+const ANDROID=!!window.PulsarAndroid,NATIVE=ANDROID||!!(window.chrome&&chrome.webview);
+const post=m=>window.chrome&&chrome.webview?chrome.webview.postMessage(m):window.PulsarAndroid&&PulsarAndroid.postMessage(m);
 const sortF=l=>l.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
 addEventListener('unhandledrejection',e=>{$('sub').textContent='Error: '+(e.reason&&e.reason.message||e.reason)});
 window.nativeInit=(list,keep)=>{
   const now=cur>=0&&files[cur]?files[cur].name:null;
   files=sortF(list.map(n=>({name:n,get:async()=>new File([await (await fetch('https://music.local/'+encodeURIComponent(n))).blob()],n)})));
   if(keep&&now!==null){cur=idxOf(now);if(!$('p3').classList.contains('hide'))lib()}else start()};
-if(NATIVE){$('open').textContent='Loading...';$('chg').classList.remove('hide');$('chg').onclick=()=>{$('menu').classList.remove('on');chrome.webview.postMessage('pick')}}
+if(NATIVE){$('open').textContent='Loading...';$('chg').classList.remove('hide');$('chg').onclick=()=>{$('menu').classList.remove('on');post('pick')}}
 $('open').onclick=async()=>{
-  if(NATIVE)return chrome.webview.postMessage('pick');
+  if(NATIVE)return post('pick');
   try{const h=await showDirectoryPicker();files=[];for await(const [n,e] of h.entries())if(e.kind==='file'&&/\.(mp3|m4a|opus|ogg|flac|wav)$/i.test(n))files.push({name:n,get:()=>e.getFile()});sortF(files);start()}
   catch(e){if(e.name==='AbortError')return;const i=document.createElement('input');i.type='file';i.webkitdirectory=true;
     i.onchange=()=>{files=sortF([...i.files].filter(f=>/\.(mp3|m4a|opus|ogg|flac|wav)$/i.test(f.name)).map(f=>({name:f.name,get:async()=>f})));start()};i.click()}
@@ -169,14 +186,40 @@ function start(){
 const recent=s=>s.log&&s.log.length?s.log.slice(-cfg.win).map(x=>x.f):null;
 const score=n=>{const s=stats[n];if(!s||!s.n)return .6;const r=recent(s);return r?(r.reduce((a,b)=>a+b,0)+.6)/(r.length+1):(s.ret+1.2)/(s.n+2)};
 function sample(idx,w){let t=w.reduce((a,b)=>a+b,0),r=Math.random()*t;for(let k=0;k<idx.length;k++){r-=w[k];if(r<=0)return idx[k]}return idx[idx.length-1]}
+let hq=null,hp=0,hy=null,lastT=null,rv;
+const ready=()=>new Promise(r=>{if(A.readyState>=1)r();else A.addEventListener('loadedmetadata',r,{once:true})});
+function rampVol(to,ms){clearInterval(rv);const from=A.volume,t0=performance.now();rv=setInterval(()=>{const p=Math.min(1,(performance.now()-t0)/ms);A.volume=Math.max(0,Math.min(1,from+(to-from)*p));if(p>=1)clearInterval(rv)},30)}
+function decayHeat(n){if(heat[n])heat[n].b=heat[n].b.map(v=>+((v||0)*.92).toFixed(2))}   // old listening fades, so the highlight follows your taste
+function addHeat(t,d){const n=files[cur].name,h=heat[n]||(heat[n]={b:[]}),i=Math.floor(t/5);while(h.b.length<=i)h.b.push(0);h.b[i]=+(h.b[i]+d*(cfg.mode==='hype'?.5:1)).toFixed(2)}
+function hypeWindow(name,dur){   // the stretch of the song you usually listen to
+  const h=heat[name];
+  if(h&&h.b&&h.b.length){const b=h.b;let pk=0,pi=0;b.forEach((v,i)=>{if(v>pk){pk=v;pi=i}});
+    if(pk>=3){let a=pi,e=pi;while(a>0&&b[a-1]>=pk*.35)a--;while(e<b.length-1&&b[e+1]>=pk*.35)e++;
+      let s0=a*5-2,e0=(e+1)*5;if(e0-s0<20){const m=(s0+e0)/2;s0=m-10;e0=m+10}if(e0-s0>80){s0=pi*5-35;e0=pi*5+45}
+      s0=Math.max(0,s0);e0=Math.min(dur-1,e0);if(e0-s0>=10)return [s0,e0]}}
+  const st=stats[name];
+  if(st&&st.n){const end=Math.max(25,Math.min(70,st.ret/st.n*dur));return [0,Math.min(dur-1,end)]}
+  const s0=Math.min(15,dur*.1);return [s0,Math.min(dur-1,s0+45)]
+}
+function hypeList(){   // top ~quarter of your library, best first
+  const ranked=files.map((f,i)=>({i,s:score(f.name),n:(stats[f.name]||{}).n||0})).filter(x=>x.n>0).sort((a,b)=>b.s-a.s);
+  let top=ranked.slice(0,Math.max(8,Math.ceil(files.length*.25))).map(x=>x.i);
+  if(top.length<5){const rest=files.map((_,i)=>i).filter(i=>!top.includes(i)).sort(()=>Math.random()-.5);top=top.concat(rest.slice(0,5-top.length))}
+  return top;
+}
+function modeHint(){
+  const m={shuffle:'Random songs - the ones you finish come up more',seq:'Playing your library in order',hype:'Hands-free: your top songs, only the parts you usually listen to'}[cfg.mode];
+  $('modehint').textContent=cfg.mode==='hype'&&hy?`⚡ ${fmt(hy.a)} – ${fmt(hy.b)} · favorite ${Math.max(1,hp)} of ${hq?hq.length:'?'} · tap next to skip`:m;
+}
 function chooseNext(){
+  if(cfg.mode==='hype'){if(!hq||hp>=hq.length){hq=hypeList();hp=0}return hq[hp++]}
   if(cfg.mode==='seq')return (cur+1)%files.length;
   const idx=files.map((_,i)=>i).filter(i=>i!==cur||files.length===1);
   if(Math.random()<cfg.exp/100)return sample(idx,idx.map(i=>1/(1+(stats[files[i].name]?.n||0))));
   return sample(idx,idx.map(i=>Math.pow(score(files[i].name),3)));
 }
 function record(){
-  if(cur<0||!A.duration||A.currentTime<3)return;
+  if(cur<0||!A.duration||A.currentTime<3||cfg.mode==='hype')return;
   const f=files[cur].name,frac=Math.min(1,A.currentTime/A.duration),s=stats[f]||(stats[f]={n:0,ret:0,done:0,skips:0,time:0});
   (s.log||(s.log=[])).push({t:Date.now(),f:+frac.toFixed(3)});
   s.n++;s.ret+=frac;s.time+=A.currentTime;frac>.9?s.done++:s.skips++;
@@ -212,12 +255,16 @@ const NOART='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.
 async function playIdx(i,fromHist){
   record();cur=i;
   const f=await files[i].get();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);A.src=url;
-  await loudness(f);applyVol();
+  await loudness(f);applyVol();lastT=null;decayHeat(files[i].name);
   const m=await meta(f);$('title').textContent=m.title;$('sub').textContent=m.artist;$('art').src=m.pic||NOART;
   lookForSong();
   document.querySelectorAll('.li').forEach(e=>e.classList.toggle('now',+e.dataset.i===cur));
   ['title','sub'].forEach(id=>{const e=$(id);e.classList.remove('swap');void e.offsetWidth;e.classList.add('swap')});
-  document.title=m.title;A.play().catch(()=>{});
+  document.title=m.title;
+  hy=null;
+  if(cfg.mode==='hype'){await ready();const w=hypeWindow(files[i].name,A.duration);hy={a:w[0],b:w[1],end:false};A.currentTime=w[0];A.volume=0}
+  modeHint();A.play().catch(()=>{});
+  if(hy)rampVol(cfg.vol/100,700);
 }
 // trail = songs in the order played; going back then forward replays the same songs, only a "next" past the end picks something new
 const idxOf=n=>files.findIndex(f=>f.name===n);
@@ -234,11 +281,13 @@ const setPlay=on=>{$('playic').innerHTML=on?IC.pause:IC.play;$('bgc').style.opac
 setPlay(false);
 A.onplay=()=>setPlay(true);A.onpause=()=>setPlay(false);
 A.onended=next;
-A.ontimeupdate=()=>{$('cur').textContent=fmt(A.currentTime);$('dur').textContent=fmt(A.duration);if(A.duration)$('seek').value=A.currentTime/A.duration*1000};
+A.ontimeupdate=()=>{$('cur').textContent=fmt(A.currentTime);$('dur').textContent=fmt(A.duration);if(A.duration)$('seek').value=A.currentTime/A.duration*1000;
+  if(!A.paused&&!A.seeking&&cur>=0){if(lastT!==null){const d=A.currentTime-lastT;if(d>0&&d<1.3)addHeat(A.currentTime,d)}lastT=A.currentTime}else lastT=null;
+  if(hy&&!hy.end&&A.currentTime>=hy.b-.7){const h=hy;h.end=true;rampVol(0,600);setTimeout(()=>{if(hy===h&&cfg.mode==='hype')next()},620)}};
 $('seek').oninput=e=>A.currentTime=e.target.value/1000*A.duration;
 const sync=()=>{$('volv').textContent=cfg.vol+'%';$('expv').textContent=cfg.exp+'%';$('winv').textContent=cfg.win};
-$('mode').onclick=()=>{cfg.mode=cfg.mode==='seq'?'shuffle':'seq';setMode();save()};
-const setMode=()=>{const q=cfg.mode==='seq';$('modeic').innerHTML=q?IC.seq:IC.shuf;$('modelbl').textContent=q?'In order':'Shuffle';$('mode').classList.toggle('on',!q)};
+const setMode=()=>{document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m===cfg.mode));modeHint()};
+$('seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;const m=b.dataset.m;if(m===cfg.mode)return;cfg.mode=m;hq=null;hp=0;if(m!=='hype'){hy=null;A.volume=cfg.vol/100}setMode();save();if(m==='hype')go(chooseNext())};
 $('exp').oninput=e=>{cfg.exp=+e.target.value;sync();save()};
 $('win').oninput=e=>{cfg.win=+e.target.value;sync();save()};
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.target.type==='text')return;
@@ -254,21 +303,21 @@ async function loudness(f){
     let t=0,n=0;for(let i=0;i<d.length;i+=8){t+=d[i]*d[i];n++}e.L=10*Math.log10(t/n+1e-9);save()}catch(x){}
   return e.L??REF;
 }
-function applyVol(){
-  const e=lv[files[cur].name]||{},L=e.L??REF;
-  if(cfg.Lp==null)cfg.Lp=L+20*Math.log10(Math.max(.01,cfg.vol/100));
-  const v=Math.min(1,Math.max(.02,Math.pow(10,(cfg.Lp-L+(e.b||0))/20)));
-  A.volume=v;cfg.vol=Math.round(v*100);$('vol').value=cfg.vol;sync();
-}
+function applyVol(){A.volume=cfg.vol/100;$('vol').value=cfg.vol;sync();lvM=(lv[files[cur].name]||{}).L??REF}
 $('vol').oninput=e=>{
-  const v=Math.max(.01,e.target.value/100);A.volume=v;cfg.vol=+e.target.value;
-  if(cur>=0){const en=lv[files[cur].name]||(lv[files[cur].name]={}),lvl=(en.L??REF)+20*Math.log10(v);
-    cfg.Lp=cfg.Lp==null?lvl:cfg.Lp+.2*(lvl-cfg.Lp);
-    en.b=en.b==null?lvl-cfg.Lp:.5*en.b+.5*(lvl-cfg.Lp);
-    if(Date.now()-lastAdj>2000){en.adj=(en.adj||0)+1;cfg.adj=(cfg.adj||0)+1}lastAdj=Date.now()}
-  sync();save();
+  cfg.vol=+e.target.value;A.volume=cfg.vol/100;
+  if(Date.now()-lastAdj>2000)cfg.adj=(cfg.adj||0)+1;lastAdj=Date.now();sync();save();
 };
-
+// leveler: tracks short-term loudness (about 2 s), then lifts quiet parts / tames loud ones toward one target, within +/-9 dB
+let lvM=-20,pre,pbuf,lg,comp;
+setInterval(()=>{
+  if(!pre||A.paused)return;
+  pre.getFloatTimeDomainData(pbuf);let sum=0;for(let i=0;i<pbuf.length;i++)sum+=pbuf[i]*pbuf[i];
+  const db=10*Math.log10(sum/pbuf.length+1e-12);
+  if(db>-50)lvM+=(db-lvM)*(db>lvM?.06:.025);
+  const g=cfg.lvl===false?0:Math.max(-9,Math.min(9,REF-lvM));
+  lg.gain.setTargetAtTime(Math.pow(10,g/20),ac.currentTime,.5);
+},100);
 // ---------- colour helpers ----------
 function hsl(h,s,l){h=((h%360)+360)%360/360;const f=n=>{const k=(n+h*12)%12,a=s*Math.min(l,1-l);return l-a*Math.max(-1,Math.min(k-3,9-k,1))};return [f(0),f(8),f(4)].map(v=>Math.round(v*255)).join(',')}
 function shift(str,deg){const [r,g,b]=str.split(',').map(Number),mx=Math.max(r,g,b)/255,mn=Math.min(r,g,b)/255,l=(mx+mn)/2,d=mx-mn;let h=0;
@@ -315,7 +364,7 @@ function pickStyle(){
   return sample(idx,idx.map(i=>Math.pow(sRet(i),3)*(1+Math.min(5,(sty[i]||{}).likes||0)*1.5)));   // liked looks get up to ~8x the weight                              // exploit liked ones
 }
 const bgc=$('bgc'),bx=bgc.getContext('2d');let BW=1,BH=1,rings=[],stars=null,life=null,lastStep=0,hueCols=['255,77,109'];
-function fitBg(){const s=.7*(devicePixelRatio||1);BW=bgc.width=Math.ceil(innerWidth*s);BH=bgc.height=Math.ceil(innerHeight*s);life=null;stars=null}
+function fitBg(){const s=ANDROID?1:.7*(devicePixelRatio||1);BW=bgc.width=Math.ceil(innerWidth*s);BH=bgc.height=Math.ceil(innerHeight*s);life=null;stars=null}
 function setStyle(i){
   style=i;rings=[];stars=null;life=null;flow=null;cols=null;drops=null;ripp=[];flash=0;rk=[];sparks=[];em=[];peaks=[];
   snapc.width=BW;snapc.height=BH;snapc.getContext('2d').drawImage(bgc,0,0);fadeT=1;   // old look fades out over the new one
@@ -535,7 +584,12 @@ const RND={blobs:rBlobs,stars:rStars,life:rLife,synth:rSynth,radial:rRadial,tunn
 // ---------- audio analysis + render loop ----------
 let an,fd,td,avg=0,beat=0,pulse=0,bassE=0,rgb='255,77,109';
 A.addEventListener('play',()=>{
-  if(!an){ac=ac||new AudioContext();const src=ac.createMediaElementSource(A);an=ac.createAnalyser();an.fftSize=512;an.smoothingTimeConstant=.78;src.connect(an);an.connect(ac.destination);fd=new Uint8Array(an.frequencyBinCount);td=new Uint8Array(an.fftSize)}
+  if(!an){ac=ac||new AudioContext();const src=ac.createMediaElementSource(A);
+    pre=ac.createAnalyser();pre.fftSize=2048;pbuf=new Float32Array(2048);lg=ac.createGain();
+    comp=ac.createDynamicsCompressor();comp.threshold.value=-20;comp.knee.value=24;comp.ratio.value=3;comp.attack.value=.01;comp.release.value=.3;
+    an=ac.createAnalyser();an.fftSize=512;an.smoothingTimeConstant=.78;
+    src.connect(pre);pre.connect(lg);lg.connect(comp);comp.connect(an);an.connect(ac.destination);
+    fd=new Uint8Array(an.frequencyBinCount);td=new Uint8Array(an.fftSize)}
   ac.resume();
 });
 const cv=$('viz'),cx=cv.getContext('2d');
@@ -598,13 +652,15 @@ $('nextlook').onclick=()=>{let n=style,tries=0;while(n===style&&tries++<8)n=cfg.
   if(cfg.sm==='pin'){cfg.sm='auto';save()}styleLeft=2+(Math.random()<.5?1:0);setStyle(n)};
 // buttons poke the background: a shockwave from the button plus a forced "beat" so every look reacts in its own way
 function poke(el){const r=el.getBoundingClientRect();shocks.push({x:(r.left+r.width/2)/innerWidth*BW,y:(r.top+r.height/2)/innerHeight*BH,r:U()*.03,a:1});forceEdge=true;pulse=Math.max(pulse,.9)}
-['prev','play','next','mode','nextlook','like','art'].forEach(id=>$(id).addEventListener('click',()=>poke($(id))));
+['prev','play','next','seg','nextlook','like','art'].forEach(id=>$(id).addEventListener('click',()=>poke($(id))));
 $('win').oninput=e=>{cfg.win=+e.target.value;sync();save()};
+const lvlLabel=()=>$('lvlbtn').textContent='Auto-level volume: '+(cfg.lvl===false?'off':'on');lvlLabel();$('lvlbtn').classList.toggle('on',cfg.lvl!==false);
+$('lvlbtn').onclick=()=>{cfg.lvl=cfg.lvl===false;lvlLabel();$('lvlbtn').classList.toggle('on',cfg.lvl!==false);save()};
 
 // ---------- downloads (handled by the native app, which runs yt-dlp) ----------
-if(!NATIVE){$('dlbox').classList.add('hide');$('dlno').classList.remove('hide')}
-$('dlgo').onclick=()=>{const u=$('dlurl').value.trim();if(u)chrome.webview.postMessage('dl:'+u)};
-$('dlcancel').onclick=()=>chrome.webview.postMessage('dlcancel');
+if(!NATIVE||ANDROID){$('dlbox').classList.add('hide');$('dlno').classList.remove('hide');if(ANDROID)$('dlno').textContent="Downloading isn't in the Android app yet - download on a PC with Pulsar and copy the songs to your phone's music folder."}
+$('dlgo').onclick=()=>{const u=$('dlurl').value.trim();if(u)post('dl:'+u)};
+$('dlcancel').onclick=()=>post('dlcancel');
 window.dlEvent=e=>{
   $('dlmsg').textContent=e.m;const busy=e.t==='prog'||e.t==='info';
   $('dlt').classList.toggle('hide',!busy&&e.t!=='done');$('dlfill').style.width=(e.t==='done'?100:e.p)+'%';
@@ -638,6 +694,7 @@ window.__selftest=()=>{ // debug: run every renderer with fake audio and report 
     try{for(let f=0;f<6;f++)RND[s.r](c,.6,f*.3,.8,f%2===0,performance.now()+f*200,true)}catch(e){err=e.message}
     const d=bx.getImageData(0,0,BW,BH).data;let sum=0,n=0;for(let j=0;j<d.length;j+=388){sum+=d[j]+d[j+1]+d[j+2];n++}
     out.push(i+' '+s.n+': '+(err||'ok')+' lum='+Math.round(sum/n/3))});
-  return ($('title').textContent+' ## '+$('sub').textContent+' ## look='+$('lname').textContent+' ## tp='+tp+' left='+styleLeft+' ## ')+out.join(' | ')};
+  heat.__t={b:[0,0,1,5,9,12,10,6,1,0]};const hw=hypeWindow('__t',300);delete heat.__t;
+  return ($('title').textContent+' ## hype '+JSON.stringify([hypeList().length,hw])+' lvM='+lvM.toFixed(1)+' gain='+(lg?lg.gain.value.toFixed(2):'none')+' ## '+$('sub').textContent+' ## look='+$('lname').textContent+' ## tp='+tp+' left='+styleLeft+' ## ')+out.join(' | ')};
 setStyle(cfg.sm==='pin'?cfg.sp:0);
 </script></body></html>
