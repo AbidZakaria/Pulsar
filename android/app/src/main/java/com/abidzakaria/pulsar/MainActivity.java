@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Intent;
+import android.os.Handler;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -43,10 +45,26 @@ public class MainActivity extends Activity {
     volatile boolean exploring, cancel, downloading;
     final LinkedList<String> pvQueue = new LinkedList<String>();
     boolean pvRunning;
+    boolean playing;
+    String dlText = "";
+    int dlPct = -1;
+    static volatile MainActivity current;
+    final Handler ui = new Handler();
+    final Runnable stopSoon = new Runnable() { public void run() { bgUpdate(); } };
+
+    /** Keeps the process alive (foreground service + notification) while music plays or a download runs. */
+    void bgUpdate() {
+        Intent i = new Intent(this, KeepAlive.class);
+        if (!downloading && !playing) { stopService(i); return; }
+        String text = downloading ? dlText : "Playing";
+        i.putExtra("text", text).putExtra("pct", downloading ? dlPct : -1).putExtra("dl", downloading);
+        try { startForegroundService(i); } catch (Exception e) { }
+    }
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        current = this;
         wv = new WebView(this);
         setContentView(wv);
         WebSettings s = wv.getSettings();
@@ -62,6 +80,11 @@ public class MainActivity extends Activity {
                 else if (m.startsWith("ex:")) explore(m.substring(3));
                 else if (m.startsWith("pv:")) queuePreview(m.substring(3));
                 else if (m.startsWith("dl:")) download(m.substring(3));
+                else if (m.startsWith("bg:")) runOnUiThread(new Runnable() { public void run() {
+                    playing = m.endsWith("1");
+                    ui.removeCallbacks(stopSoon);
+                    if (playing) bgUpdate(); else ui.postDelayed(stopSoon, 4000);   // track changes pause for a moment
+                } });
             }
         }, "PulsarAndroid");
         wv.setWebViewClient(new WebViewClient() {
@@ -115,7 +138,8 @@ public class MainActivity extends Activity {
 
     void ensureAccess() {
         if (checkSelfPermission(perm()) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] { perm() }, 1);
+            // the notification permission (Android 13+) only decides whether the status notification is visible
+            requestPermissions(Build.VERSION.SDK_INT >= 33 ? new String[] { perm(), Manifest.permission.POST_NOTIFICATIONS } : new String[] { perm() }, 1);
             return;
         }
         sendList(false);
@@ -246,6 +270,9 @@ public class MainActivity extends Activity {
         if (id == null) { ev("dlEvent", "err", "Paste a YouTube or YouTube Music song link", 0); return; }
         downloading = true;
         cancel = false;
+        dlText = "Starting download...";
+        dlPct = 0;
+        bgUpdate();
         new Thread(new Runnable() {
             public void run() {
                 Uri uri = null;
@@ -278,7 +305,13 @@ public class MainActivity extends Activity {
                         Core.fetch(au.url, have, -1, out, new Core.Progress() {
                             public boolean on(long done, long total) {
                                 if (cancel) return false;
-                                ev("dlEvent", "prog", "Downloading - " + shown, total > 0 ? (int) Math.min(99, done * 100 / total) : 0);
+                                int pct = total > 0 ? (int) Math.min(99, done * 100 / total) : 0;
+                                if (pct != dlPct) {
+                                    dlPct = pct;
+                                    dlText = "Downloading - " + shown;
+                                    ev("dlEvent", "prog", dlText, pct);
+                                    bgUpdate();
+                                }
                                 return true;
                             }
                         });
@@ -296,9 +329,16 @@ public class MainActivity extends Activity {
                     ev("dlEvent", "err", cancel ? "Download cancelled" : "Download failed: " + why(e), 0);
                 } finally {
                     downloading = false;
+                    runOnUiThread(new Runnable() { public void run() { bgUpdate(); } });
                 }
             }
         }).start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (!downloading && !playing) stopService(new Intent(this, KeepAlive.class));
     }
 
     @Override
