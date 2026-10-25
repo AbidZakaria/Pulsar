@@ -18,3 +18,7 @@ native/lib/
 
 android/build/
 release/*.idsig
+android/app/src/main/assets/
+android/.gradle/
+android/app/build/
+android/local.properties

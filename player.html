@@ -120,7 +120,7 @@ h3{margin:16px 0 8px;font-size:14px;color:var(--dim);font-weight:600}
  </div>
 
  <div id="p3" class="page hide"><div style="display:flex;gap:8px;flex:none"><input id="q" placeholder="Search songs..."><button class="pill" id="addm" title="Download music" style="margin:0 0 8px;flex:none">&#11015;</button></div><div class="scroll" id="lib"></div></div>
- <div id="p4" class="page hide"><div style="display:flex;gap:8px;flex:none;align-items:center"><button class="pill" id="exgo" style="margin:0 0 8px;flex:none">Find songs like my favorites</button><span class="hint" id="exmsg" style="padding:0 0 8px">Suggestions come from YouTube's mixes for your top songs.</span></div><div class="scroll" id="exl"></div></div>
+ <div id="p4" class="page hide"><div class="hint hide" id="exwel" style="padding-bottom:6px"><b style="color:var(--fg,#fff);font-size:15px">Welcome to Pulsar</b><br>Your library is empty. Pick a few genres or type an artist or song you like - Pulsar finds music you can preview and download.</div><div id="exchips" style="flex:none"></div><div style="display:flex;gap:8px;flex:none;align-items:center"><input id="exq" placeholder="An artist or song you like..."><button class="pill" id="exgo" style="margin:0 0 8px;flex:none">Find</button></div><div class="hint" id="exmsg" style="flex:none;padding:0 0 8px">Suggestions come from YouTube's mixes for your top songs, or from what you type above.</div><div class="scroll" id="exl"></div></div>
  <div id="p2" class="page hide"><div class="scroll"><div id="sum"></div><table id="st"></table><h3>Visual styles</h3><table id="sst"></table></div></div>
  <audio id="a"></audio>
 </div>
@@ -152,7 +152,7 @@ h3{margin:16px 0 8px;font-size:14px;color:var(--dim);font-weight:600}
 
 <script>
 const $=i=>document.getElementById(i),A=$('a');
-let files=[],stats={},cfg={vol:70,exp:30,win:5,mode:'shuffle',sm:'auto',sp:0},cur=-1,trail=[],tp=-1,url=null,style=0;
+let started=false,files=[],stats={},cfg={vol:70,exp:30,win:5,mode:'shuffle',sm:'auto',sp:0},cur=-1,trail=[],tp=-1,url=null,style=0;
 try{Object.assign(cfg,JSON.parse(localStorage.cfg||'{}'));stats=JSON.parse(localStorage.stats||'{}')}catch(e){}
 let lv={},sty={},heat={};try{lv=JSON.parse(localStorage.lv||'{}');sty=JSON.parse(localStorage.sty||'{}');heat=JSON.parse(localStorage.heat||'{}')}catch(e){}
 const save=()=>{localStorage.cfg=JSON.stringify(cfg);localStorage.stats=JSON.stringify(stats);localStorage.lv=JSON.stringify(lv);localStorage.sty=JSON.stringify(sty);localStorage.heat=JSON.stringify(heat)};
@@ -169,16 +169,21 @@ addEventListener('unhandledrejection',e=>{$('sub').textContent='Error: '+(e.reas
 window.nativeInit=(list,keep)=>{
   const now=cur>=0&&files[cur]?files[cur].name:null;
   files=sortF(list.map(n=>({name:n,get:async()=>new File([await (await fetch('https://music.local/'+encodeURIComponent(n))).blob()],n)})));
-  if(keep&&now!==null){cur=idxOf(now);if(!$('p3').classList.contains('hide'))lib()}else start()};
+  if(!files.length&&NATIVE){tab(4);$('exwel').classList.remove('hide');$('open').textContent='No songs yet - use Explore';return}
+  $('exwel').classList.add('hide');
+  if(keep&&now!==null){cur=idxOf(now);if(!$('p3').classList.contains('hide'))lib()}
+  else if(keep&&!started){$('open').textContent='Start playing'}   // first songs arrived while browsing Explore: don't blast music over previews
+  else start()};
 if(NATIVE){$('open').textContent='Loading...';$('chg').classList.remove('hide');$('chg').onclick=()=>{$('menu').classList.remove('on');post('pick')}}
 $('open').onclick=async()=>{
-  if(NATIVE)return post('pick');
+  if(NATIVE)return files.length&&!started?start():post('pick');
   try{const h=await showDirectoryPicker();files=[];for await(const [n,e] of h.entries())if(e.kind==='file'&&/\.(mp3|m4a|opus|ogg|flac|wav)$/i.test(n))files.push({name:n,get:()=>e.getFile()});sortF(files);start()}
   catch(e){if(e.name==='AbortError')return;const i=document.createElement('input');i.type='file';i.webkitdirectory=true;
     i.onchange=()=>{files=sortF([...i.files].filter(f=>/\.(mp3|m4a|opus|ogg|flac|wav)$/i.test(f.name)).map(f=>({name:f.name,get:async()=>f})));start()};i.click()}
 };
 function start(){
   if(!files.length)return toast('No audio files found');
+  started=true;
   $('open').classList.add('hide');$('player').classList.remove('hide');
   A.volume=cfg.vol/100;$('vol').value=cfg.vol;$('exp').value=cfg.exp;$('win').value=cfg.win;sync();setMode();fit();pick(true);
 }
@@ -659,7 +664,7 @@ const lvlLabel=()=>$('lvlbtn').textContent='Auto-level volume: '+(cfg.lvl===fals
 $('lvlbtn').onclick=()=>{cfg.lvl=cfg.lvl===false;lvlLabel();$('lvlbtn').classList.toggle('on',cfg.lvl!==false);save()};
 
 // ---------- downloads (handled by the native app, which runs yt-dlp) ----------
-if(!NATIVE||ANDROID){$('dlbox').classList.add('hide');$('dlno').classList.remove('hide');if(ANDROID)$('dlno').textContent="Downloading isn't in the Android app yet - download on a PC with Pulsar and copy the songs to your phone's music folder."}
+if(!NATIVE){$('dlbox').classList.add('hide');$('dlno').classList.remove('hide');if(false)$('dlno').textContent="Downloading isn't in the Android app yet - download on a PC with Pulsar and copy the songs to your phone's music folder."}
 $('dlgo').onclick=()=>{const u=$('dlurl').value.trim();if(u)post('dl:'+u)};
 $('dlcancel').onclick=()=>post('dlcancel');
 window.dlEvent=e=>{
@@ -680,20 +685,33 @@ function exDraw(){
 const pvStop=()=>{pvA.pause();pvId=null};
 A.addEventListener('play',()=>{if(pvId){pvStop();exDraw()}});
 pvA.onended=()=>{pvId=null;exDraw()};
-function pvPlay(x){
-  pvA.src='https://preview.local/'+x.id+'.mp3';
-  A.pause();pvId=x.id;pvA.play().catch(()=>{pvId=null;x.pv='err'}).then(exDraw);exDraw();
+pvA.ontimeupdate=()=>{if(pvId&&pvA.currentTime>=33){pvStop();exDraw()}};   // a truncated clip may never fire 'ended'
+async function pvPlay(x){
+  pvId=x.id;A.pause();exDraw();
+  try{
+    if(!x.blob)x.blob=URL.createObjectURL(await (await fetch('https://preview.local/'+x.id+(ANDROID?'.m4a':'.mp3'))).blob());
+    if(pvId!==x.id)return;
+    pvA.src=x.blob;await pvA.play();
+  }catch(e){if(pvId===x.id)pvId=null;x.pv='err';x.blob=null}
+  exDraw();
 }
 window.pvEvent=e=>{
   const x=exItems.find(y=>y.id===e.id);if(!x)return;
   x.pv=e.t;
   if(e.t==='ready'&&x.want){x.want=false;pvStop();pvPlay(x)}else exDraw();
 };
+const EXG=['Pop hits','Hip hop','Rock classics','Electronic dance','Lo-fi chill','R&B soul','Arabic pop','Latin hits','Indie','Jazz','Classical piano','Metal'];
+let exSel=new Set();
+$('exchips').innerHTML=EXG.map(g=>`<button class="pill" data-g="${g}">${g}</button>`).join('');
+$('exchips').onclick=e=>{const b=e.target.closest('button');if(!b)return;const g=b.dataset.g;if(exSel.has(g))exSel.delete(g);else if(exSel.size<3)exSel.add(g);else return toast('Pick up to 3');b.classList.toggle('on',exSel.has(g))};
+$('exq').onkeydown=e=>{if(e.key==='Enter')$('exgo').click()};
 $('exgo').onclick=()=>{
-  if(!NATIVE||ANDROID){$('exmsg').textContent='Explore works in the Pulsar app on PC.';return}
-  const top=files.filter(f=>stats[f.name]&&stats[f.name].n>0).sort((a,b)=>score(b.name)-score(a.name)).slice(0,8).sort(()=>Math.random()-.5).slice(0,3).map(f=>clean(f.name));
-  if(!top.length){$('exmsg').textContent='Listen to a few songs first so Pulsar knows what you like.';return}
-  exBusy=true;$('exgo').disabled=true;post('ex:'+top.join('|'));
+  if(!NATIVE){$('exmsg').textContent='Explore works in the Pulsar app.';return}
+  if(exBusy)return;
+  let seeds=[...exSel].map(g=>g+' songs');const q=$('exq').value.trim();if(q)seeds.unshift(q);seeds=seeds.slice(0,3);
+  if(!seeds.length)seeds=files.filter(f=>stats[f.name]&&stats[f.name].n>0).sort((a,b)=>score(b.name)-score(a.name)).slice(0,8).sort(()=>Math.random()-.5).slice(0,3).map(f=>clean(f.name));
+  if(!seeds.length){$('exmsg').textContent=files.length?'Listen to a few songs first, or pick a genre / type an artist above.':'Pick a genre or type an artist you like first.';return}
+  exBusy=true;$('exgo').disabled=true;post('ex:'+seeds.join('|'));
 };
 window.exEvent=e=>{$('exmsg').textContent=e.m;if(e.t==='err'){exBusy=false;$('exgo').disabled=false}};
 window.exResult=r=>{
@@ -718,7 +736,7 @@ window.dlEvent=e=>{
 
 // ---------- tabs, library, stats ----------
 const tab=n=>{if(n!==4&&typeof pvStop==='function'){pvStop();exDraw()}[1,2,3,4].forEach(i=>{$('p'+i).classList.toggle('hide',n!==i);$('t'+i).classList.toggle('on',n===i)})};
-$('t1').onclick=()=>tab(1);$('t4').onclick=()=>{tab(4);if(!exItems.length&&NATIVE&&!ANDROID&&!exBusy)$('exgo').click()};$('t2').onclick=()=>{tab(2);render()};$('t3').onclick=()=>{tab(3);lib()};
+$('t1').onclick=()=>{tab(1);if(!started&&files.length)start()};$('t4').onclick=()=>{tab(4);if(!exItems.length&&NATIVE&&!exBusy&&files.some(f=>stats[f.name]&&stats[f.name].n>0))$('exgo').click()};$('t2').onclick=()=>{tab(2);render()};$('t3').onclick=()=>{tab(3);lib()};
 function lib(){
   const q=$('q').value.toLowerCase();
   $('lib').innerHTML=files.map((f,i)=>({f,i})).filter(x=>x.f.name.toLowerCase().includes(q)).map(({f,i})=>{
