@@ -89,7 +89,7 @@ h3{margin:16px 0 8px;font-size:14px;color:var(--dim);font-weight:600}
 </style></head><body>
 <canvas id="bgc"></canvas><div class="shade"></div>
 <div class="wrap">
- <div class="tabs"><button id="t1" class="on">Player</button><button id="t3">Library</button><button id="t2">Stats</button><button id="gear" title="Settings">⚙</button></div>
+ <div class="tabs"><button id="t1" class="on">Player</button><button id="t3">Library</button><button id="t4">Explore</button><button id="t2">Stats</button><button id="gear" title="Settings">⚙</button></div>
 
  <div id="p1" class="page">
   <button id="open">Open music folder</button>
@@ -120,6 +120,7 @@ h3{margin:16px 0 8px;font-size:14px;color:var(--dim);font-weight:600}
  </div>
 
  <div id="p3" class="page hide"><div style="display:flex;gap:8px;flex:none"><input id="q" placeholder="Search songs..."><button class="pill" id="addm" title="Download music" style="margin:0 0 8px;flex:none">&#11015;</button></div><div class="scroll" id="lib"></div></div>
+ <div id="p4" class="page hide"><div style="display:flex;gap:8px;flex:none;align-items:center"><button class="pill" id="exgo" style="margin:0 0 8px;flex:none">Find songs like my favorites</button><span class="hint" id="exmsg" style="padding:0 0 8px">Suggestions come from YouTube's mixes for your top songs.</span></div><div class="scroll" id="exl"></div></div>
  <div id="p2" class="page hide"><div class="scroll"><div id="sum"></div><table id="st"></table><h3>Visual styles</h3><table id="sst"></table></div></div>
  <audio id="a"></audio>
 </div>
@@ -669,9 +670,55 @@ window.dlEvent=e=>{
 };
 $('addm').onclick=()=>$('gear').click();
 
+// ---------- explore: songs similar to your favorites ----------
+let exItems=[],exBusy=false,exDl=null;
+const exHave=t=>{const k=t.toLowerCase().replace(/[^a-z0-9]+/g,'');return k.length>3&&files.some(f=>clean(f.name).toLowerCase().replace(/[^a-z0-9]+/g,'').includes(k))};
+const pvA=new Audio();let pvId=null;
+function exDraw(){
+  $('exl').innerHTML=exItems.map((x,i)=>`<div class="li" data-i="${i}" style="cursor:default"><span>${esc(x.title)}<br><small>${esc(x.by||'')} · like ${esc(x.seed)}</small></span><span style="display:flex;gap:6px;flex:none;align-items:center"><button class="pill" data-a="pv" style="margin:0">${pvId===x.id?'&#9724; Stop':x.pv==='load'?'Loading...':x.pv==='err'?'No preview':'&#9654; Preview'}</button><button class="pill${x.done?' on':''}" data-a="get" style="margin:0">${x.done?'Added':exDl===x.id?'...':'&#11015; Get'}</button></span></div>`).join('')||'<p class="hint">Nothing yet.</p>';
+}
+const pvStop=()=>{pvA.pause();pvId=null};
+A.addEventListener('play',()=>{if(pvId){pvStop();exDraw()}});
+pvA.onended=()=>{pvId=null;exDraw()};
+function pvPlay(x){
+  pvA.src='https://preview.local/'+x.id+'.mp3';
+  A.pause();pvId=x.id;pvA.play().catch(()=>{pvId=null;x.pv='err'}).then(exDraw);exDraw();
+}
+window.pvEvent=e=>{
+  const x=exItems.find(y=>y.id===e.id);if(!x)return;
+  x.pv=e.t;
+  if(e.t==='ready'&&x.want){x.want=false;pvStop();pvPlay(x)}else exDraw();
+};
+$('exgo').onclick=()=>{
+  if(!NATIVE||ANDROID){$('exmsg').textContent='Explore works in the Pulsar app on PC.';return}
+  const top=files.filter(f=>stats[f.name]&&stats[f.name].n>0).sort((a,b)=>score(b.name)-score(a.name)).slice(0,8).sort(()=>Math.random()-.5).slice(0,3).map(f=>clean(f.name));
+  if(!top.length){$('exmsg').textContent='Listen to a few songs first so Pulsar knows what you like.';return}
+  exBusy=true;$('exgo').disabled=true;post('ex:'+top.join('|'));
+};
+window.exEvent=e=>{$('exmsg').textContent=e.m;if(e.t==='err'){exBusy=false;$('exgo').disabled=false}};
+window.exResult=r=>{
+  exBusy=false;$('exgo').disabled=false;
+  exItems=r.filter(x=>x.title&&!exHave(x.title)).sort(()=>Math.random()-.5);
+  $('exmsg').textContent=exItems.length?exItems.length+' suggestions - tap one to download it.':'No new suggestions found - try again.';exDraw();exItems.slice(0,3).forEach(x=>post('pv:'+x.id));
+};
+$('exl').onclick=e=>{
+  const bt=e.target.closest('button'),li=e.target.closest('.li');if(!bt||!li)return;const x=exItems[+li.dataset.i];if(!x)return;
+  if(bt.dataset.a==='pv'){
+    if(pvId===x.id){pvStop();return exDraw()}
+    pvStop();
+    if(x.pv==='ready')pvPlay(x);else if(x.pv!=='load'||!x.want){x.want=true;x.pv='load';post('pv:!'+x.id);exDraw()}
+  }else if(!x.done&&!exDl){exDl=x.id;exDraw();post('dl:https://www.youtube.com/watch?v='+x.id)}
+};
+const _dlEv=window.dlEvent;
+window.dlEvent=e=>{
+  _dlEv(e);
+  if(exDl&&(e.t==='done'||e.t==='err')){const x=exItems.find(y=>y.id===exDl);if(x&&e.t==='done')x.done=true;exDl=null;exDraw()}
+  if(exDl)$('exmsg').textContent=e.m;
+};
+
 // ---------- tabs, library, stats ----------
-const tab=n=>[1,2,3].forEach(i=>{$('p'+i).classList.toggle('hide',n!==i);$('t'+i).classList.toggle('on',n===i)});
-$('t1').onclick=()=>tab(1);$('t2').onclick=()=>{tab(2);render()};$('t3').onclick=()=>{tab(3);lib()};
+const tab=n=>{if(n!==4&&typeof pvStop==='function'){pvStop();exDraw()}[1,2,3,4].forEach(i=>{$('p'+i).classList.toggle('hide',n!==i);$('t'+i).classList.toggle('on',n===i)})};
+$('t1').onclick=()=>tab(1);$('t4').onclick=()=>{tab(4);if(!exItems.length&&NATIVE&&!ANDROID&&!exBusy)$('exgo').click()};$('t2').onclick=()=>{tab(2);render()};$('t3').onclick=()=>{tab(3);lib()};
 function lib(){
   const q=$('q').value.toLowerCase();
   $('lib').innerHTML=files.map((f,i)=>({f,i})).filter(x=>x.f.name.toLowerCase().includes(q)).map(({f,i})=>{

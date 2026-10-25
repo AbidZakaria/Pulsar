@@ -3,6 +3,8 @@
 **[Download PulsarSetup.exe](https://github.com/AbidZakaria/Pulsar/raw/main/release/PulsarSetup.exe)** - double-click and follow the window. It installs Pulsar (Start menu + optional desktop shortcut) and, if you tick the box, the music downloader (ffmpeg + yt-dlp, about 130 MB of downloads). No admin rights needed; uninstall from *Settings -> Apps*.
 Windows 10/11 only. SmartScreen may warn because the files are unsigned: click *More info* -> *Run anyway*.
 
+**Android:** [Pulsar.apk](https://github.com/AbidZakaria/Pulsar/raw/main/release/Pulsar.apk) plays the songs in your phone's *Music* folder with the same visuals and learning (allow "install unknown apps" once). Downloading and Explore are PC-only. Rebuild with `build-android.ps1`.
+
 Prefer no installer? [Pulsar.exe](https://github.com/AbidZakaria/Pulsar/raw/main/release/Pulsar.exe) is the same app as a single portable file (the downloader then installs its tools on first use through winget).
 
 A small offline music player for Windows. Plays a folder of audio files with:
@@ -11,6 +13,7 @@ A small offline music player for Windows. Plays a folder of audio files with:
 - retention tracking per song (rolling window) and an explore-vs-exploit shuffle
 - automatic per-song volume that learns your preferred level
 - 20 beat-reactive background styles (incl. Conway's Game of Life) that learn which you like
+- **Explore** tab: songs similar to your favorites (from YouTube mixes) with 30 s previews and one-tap download
 - built-in YouTube / YT Music downloader (needs yt-dlp + ffmpeg, installed via winget on first use)
 
 `player.html` is the whole UI. `native/Program.cs` is a tiny WebView2 host that is compiled into a single `Pulsar.exe`.
