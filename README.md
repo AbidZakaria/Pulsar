@@ -3,7 +3,7 @@
 **[Download PulsarSetup.exe](https://github.com/AbidZakaria/Pulsar/raw/main/release/PulsarSetup.exe)** - double-click and follow the window. It installs Pulsar (Start menu + optional desktop shortcut) and, if you tick the box, the music downloader (ffmpeg + yt-dlp, about 130 MB of downloads). No admin rights needed; uninstall from *Settings -> Apps*.
 Windows 10/11 only. SmartScreen may warn because the files are unsigned: click *More info* -> *Run anyway*.
 
-**Android:** [Pulsar.apk](https://github.com/AbidZakaria/Pulsar/raw/main/release/Pulsar.apk) plays the songs in your phone's *Music* folder with the same visuals and learning (allow "install unknown apps" once). Downloading and Explore are PC-only. Rebuild with `build-android.ps1`.
+**Android:** [Pulsar.apk](https://github.com/AbidZakaria/Pulsar/raw/main/release/Pulsar.apk) is the full app on Android (Android 10+): same visuals and learning, plus Explore, previews and downloads (saved as M4A into *Music/Pulsar*). Allow "install unknown apps" once. First launch with no songs opens Explore. Rebuild with `build-android.ps1`.
 
 Prefer no installer? [Pulsar.exe](https://github.com/AbidZakaria/Pulsar/raw/main/release/Pulsar.exe) is the same app as a single portable file (the downloader then installs its tools on first use through winget).
 
@@ -27,5 +27,7 @@ in `native\lib` (get them from the `Microsoft.Web.WebView2` NuGet package; they 
 
 ## License
 [MIT](LICENSE) - (c) 2026 Abid Zakaria. You're free to use, modify and share Pulsar, as long as you keep the copyright notice and license text (i.e. credit the original author).
+
+The Android app additionally bundles [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) (GPL-3.0-or-later) for YouTube lookups, so `Pulsar.apk` is distributed under GPL-3.0; its full source is this repository.
 
 Third-party pieces: the app uses Microsoft WebView2 (Microsoft's own license). The optional downloader uses yt-dlp (Unlicense) and ffmpeg (GPL/LGPL), which the installer downloads from their official sites rather than bundling them.
