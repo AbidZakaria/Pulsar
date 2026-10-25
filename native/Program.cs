@@ -115,12 +115,26 @@ class MainForm : Form
             else
                 e.Response = c.Environment.CreateWebResourceResponse(null, 404, "Not Found", "Access-Control-Allow-Origin: *");
         };
+        c.AddWebResourceRequestedFilter("https://preview.local/*", CoreWebView2WebResourceContext.All);
+        c.WebResourceRequested += delegate (object s, CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            if (!e.Request.Uri.StartsWith("https://preview.local/")) return;
+            string name = Path.GetFileName(Uri.UnescapeDataString(new Uri(e.Request.Uri).AbsolutePath));
+            string path = Path.Combine(PreviewDir, name);
+            if (name.Length > 0 && File.Exists(path))
+                e.Response = c.Environment.CreateWebResourceResponse(new MemoryStream(File.ReadAllBytes(path)), 200, "OK",
+                    "Access-Control-Allow-Origin: *\r\nContent-Type: audio/mpeg");
+            else
+                e.Response = c.Environment.CreateWebResourceResponse(null, 404, "Not Found", "Access-Control-Allow-Origin: *");
+        };
         c.WebMessageReceived += delegate (object s, CoreWebView2WebMessageReceivedEventArgs e)
         {
+            if (e.TryGetWebMessageAsString() != null && e.TryGetWebMessageAsString().StartsWith("pv:")) { QueuePreview(e.TryGetWebMessageAsString().Substring(3)); return; }
             var msg = e.TryGetWebMessageAsString();
             if (msg == "pick") { if (PickFolder()) SendList(false); }
             else if (msg == "dlcancel") CancelDownload();
             else if (msg != null && msg.StartsWith("dl:")) StartDownload(msg.Substring(3));
+            else if (msg != null && msg.StartsWith("ex:")) StartExplore(msg.Substring(3));
         };
         c.NavigationCompleted += delegate { SendList(false); };
 
@@ -208,6 +222,146 @@ class MainForm : Form
         var psi = new ProcessStartInfo(exe, args);
         psi.CreateNoWindow = true; psi.UseShellExecute = false;
         using (var p = Process.Start(psi)) { p.WaitForExit(600000); }
+    }
+
+    // ---------------- explore: similar songs via YouTube's own mix for each seed song ----------------
+    bool exploring;
+
+    void ExJs(string script)
+    {
+        try { BeginInvoke(new Action(delegate { if (wv.CoreWebView2 != null) wv.CoreWebView2.ExecuteScriptAsync(script); })); }
+        catch { }
+    }
+
+    void StartExplore(string seeds)
+    {
+        if (exploring) return;
+        var list = new System.Collections.Generic.List<string>();
+        foreach (var s in seeds.Split('|'))
+        {
+            var t = s.Replace("\"", "").Replace("\\", "").Trim();
+            if (t.Length > 0 && list.Count < 3) list.Add(t);
+        }
+        if (list.Count == 0) { ExJs("window.exEvent&&window.exEvent({t:'err',m:'Listen to a few songs first so Pulsar knows what you like'})"); return; }
+        exploring = true;
+        try   // drop old preview clips
+        {
+            foreach (var f in Directory.GetFiles(PreviewDir))
+                if (File.GetLastWriteTime(f) < DateTime.Now.AddDays(-1)) File.Delete(f);
+        }
+        catch { }
+        System.Threading.ThreadPool.QueueUserWorkItem(delegate { RunExplore(list); });
+    }
+
+    // ---- previews: only a short clip of each suggestion is fetched, one at a time; clicked ones jump the queue ----
+    string PreviewDir { get { var d = Path.Combine(dataDir, "preview"); Directory.CreateDirectory(d); return d; } }
+    readonly System.Collections.Generic.List<string> pvQueue = new System.Collections.Generic.List<string>();
+    bool pvRunning;
+
+    void QueuePreview(string arg)
+    {   // arg: "<id>" (prefetch) or "!<id>" (user wants it now)
+        bool now = arg.StartsWith("!");
+        var id = arg.TrimStart('!');
+        if (!Regex.IsMatch(id, "^[A-Za-z0-9_-]{6,20}$")) return;
+        if (File.Exists(Path.Combine(PreviewDir, id + ".mp3"))) { ExJs("window.pvEvent&&window.pvEvent({id:\"" + id + "\",t:'ready'})"); return; }
+        lock (pvQueue)
+        {
+            pvQueue.Remove(id);
+            if (now) pvQueue.Insert(0, id); else pvQueue.Add(id);
+            if (pvRunning) return;
+            pvRunning = true;
+        }
+        System.Threading.ThreadPool.QueueUserWorkItem(delegate { PreviewWorker(); });
+    }
+
+    void PreviewWorker()
+    {
+        try
+        {
+            var ytdlp = FindTool("yt-dlp"); var ff = FindTool("ffmpeg");
+            while (true)
+            {
+                string id;
+                lock (pvQueue) { if (pvQueue.Count == 0) { pvRunning = false; return; } id = pvQueue[0]; pvQueue.RemoveAt(0); }
+                if (ytdlp == null || ff == null) { ExJs("window.pvEvent&&window.pvEvent({id:\"" + id + "\",t:'err'})"); continue; }
+                ExJs("window.pvEvent&&window.pvEvent({id:\"" + id + "\",t:'load'})");
+                try
+                {
+                    var psi = new ProcessStartInfo(ytdlp, "-x --audio-format mp3 --audio-quality 5 --download-sections \"*0:25-0:55\" --no-playlist --no-warnings --ffmpeg-location \"" +
+                        Path.GetDirectoryName(ff) + "\" -P \"" + PreviewDir + "\" -o \"" + id + ".%(ext)s\" \"https://www.youtube.com/watch?v=" + id + "\"");
+                    psi.CreateNoWindow = true; psi.UseShellExecute = false;
+                    using (var p = Process.Start(psi)) { if (!p.WaitForExit(90000)) { try { p.Kill(); } catch { } } }
+                }
+                catch { }
+                ExJs("window.pvEvent&&window.pvEvent({id:\"" + id + "\",t:'" + (File.Exists(Path.Combine(PreviewDir, id + ".mp3")) ? "ready" : "err") + "'})");
+            }
+        }
+        catch { lock (pvQueue) { pvRunning = false; } }
+    }
+
+    // runs yt-dlp, returns the JSON lines it printed (one object per line)
+    static System.Collections.Generic.List<string> YtLines(string ytdlp, string args)
+    {
+        var res = new System.Collections.Generic.List<string>();
+        var psi = new ProcessStartInfo(ytdlp, args);
+        psi.CreateNoWindow = true; psi.UseShellExecute = false;
+        psi.RedirectStandardOutput = true; psi.RedirectStandardError = true;
+        psi.StandardOutputEncoding = Encoding.UTF8;
+        using (var p = Process.Start(psi))
+        {
+            p.ErrorDataReceived += delegate { };
+            p.BeginErrorReadLine();
+            var task = System.Threading.Tasks.Task.Factory.StartNew(delegate
+            {
+                string l; while ((l = p.StandardOutput.ReadLine()) != null) if (l.StartsWith("{")) res.Add(l);
+            });
+            if (!p.WaitForExit(60000)) { try { p.Kill(); } catch { } }
+            task.Wait(2000);
+        }
+        return res;
+    }
+
+    static string JsonField(string json, string key)
+    {
+        var m = Regex.Match(json, "\"" + key + "\":\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+        return m.Success ? m.Groups[1].Value : "";
+    }
+
+    void RunExplore(System.Collections.Generic.List<string> seeds)
+    {
+        try
+        {
+            var ytdlp = FindTool("yt-dlp");
+            if (ytdlp == null)
+            {
+                ExJs("window.exEvent&&window.exEvent({t:'err',m:'Download any song once first - that installs the downloader Explore needs'})");
+                return;
+            }
+            var found = new System.Collections.Generic.List<string>();
+            var ids = new System.Collections.Generic.HashSet<string>();
+            int n = 0;
+            foreach (var seed in seeds)
+            {
+                n++;
+                ExJs("window.exEvent&&window.exEvent({t:'prog',m:" + Js("Finding songs like " + seed + " (" + n + "/" + seeds.Count + ")...") + "})");
+                var hit = YtLines(ytdlp, "--flat-playlist --dump-json --playlist-end 1 --no-warnings \"ytsearch1:" + seed + " audio\"");
+                if (hit.Count == 0) continue;
+                var id = JsonField(hit[0], "id");
+                if (id.Length == 0) continue;
+                ids.Add(id);
+                var mix = YtLines(ytdlp, "--flat-playlist --dump-json --playlist-end 14 --no-warnings \"https://www.youtube.com/watch?v=" + id + "&list=RD" + id + "\"");
+                foreach (var l in mix)
+                {
+                    var mid = JsonField(l, "id");
+                    if (mid.Length == 0 || !ids.Add(mid)) continue;
+                    found.Add("{\"id\":\"" + mid + "\",\"title\":\"" + JsonField(l, "title") + "\",\"by\":\"" +
+                        (JsonField(l, "channel").Length > 0 ? JsonField(l, "channel") : JsonField(l, "uploader")) + "\",\"seed\":" + Js(seed) + "}");
+                }
+            }
+            ExJs("window.exResult&&window.exResult([" + string.Join(",", found.ToArray()) + "])");
+        }
+        catch (Exception ex) { ExJs("window.exEvent&&window.exEvent({t:'err',m:" + Js("Explore failed: " + ex.Message) + "})"); }
+        finally { exploring = false; }
     }
 
     void CancelDownload()
